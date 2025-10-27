@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Salesforce Relationship Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Salesforce Relationship Analyzer</h1>
+        <p class="lead">
+          Import Salesforce CSV exports and evaluate alerts on Accounts, Contacts, Individuals, and related contact points.
+        </p>
+      </header>
+
+      <section id="import-section" class="card">
+        <h2>Import data</h2>
+        <p>
+          Provide CSV exports for each supported Salesforce object. The tool recreates the relationships between the objects and keeps them in memory for further analysis.
+        </p>
+        <form id="import-form" enctype="multipart/form-data">
+          <div class="grid">
+            <label class="file-input">
+              <span>Account CSV</span>
+              <input type="file" name="account" accept=".csv" required />
+            </label>
+            <label class="file-input">
+              <span>Contact CSV</span>
+              <input type="file" name="contact" accept=".csv" required />
+            </label>
+            <label class="file-input">
+              <span>AccountContactRelation CSV</span>
+              <input type="file" name="accountContactRelation" accept=".csv" required />
+            </label>
+            <label class="file-input">
+              <span>Individual CSV</span>
+              <input type="file" name="individual" accept=".csv" required />
+            </label>
+            <label class="file-input">
+              <span>ContactPointPhone CSV</span>
+              <input type="file" name="contactPointPhone" accept=".csv" required />
+            </label>
+            <label class="file-input">
+              <span>ContactPointEmail CSV</span>
+              <input type="file" name="contactPointEmail" accept=".csv" required />
+            </label>
+          </div>
+          <button type="submit" class="primary">Import CSV files</button>
+        </form>
+        <div id="import-status" role="status" aria-live="polite"></div>
+      </section>
+
+      <section id="alerts-section" class="card">
+        <h2>Alerts</h2>
+        <p>
+          Configure and execute alert rules to identify relationship anomalies between your Salesforce records.
+        </p>
+        <form id="alerts-form">
+          <fieldset>
+            <legend>Alert rules</legend>
+            <ul class="alert-list">
+              {% for alert_id, description in alerts.items() %}
+              <li>
+                <label>
+                  <input type="checkbox" name="alerts" value="{{ alert_id }}" checked />
+                  <strong>{{ description }}</strong>
+                  <span class="alert-id">({{ alert_id }})</span>
+                </label>
+              </li>
+              {% endfor %}
+            </ul>
+          </fieldset>
+          <button type="button" id="run-alerts" class="primary">Run selected alerts</button>
+        </form>
+        <div id="alerts-results" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/import.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/alerts.js') }}" defer></script>
+  </body>
+</html>
