@@ -1,6 +1,32 @@
 {% extends "base.html" %}
 
 {% block content %}
+<section class="query-section" aria-labelledby="query-helper-heading">
+  <h2 id="query-helper-heading">Build export queries for a set of Accounts</h2>
+  <p>
+    Paste one or more Account IDs and we will generate SOQL snippets that you can run in Salesforce to
+    produce CSV extracts for every supported object.
+  </p>
+  <form id="query-generator-form" class="query-form">
+    <label for="account-ids">Account IDs</label>
+    <textarea
+      id="account-ids"
+      name="account_ids"
+      rows="4"
+      placeholder="001XXXXXXXXXXXX\n001YYYYYYYYYYYY\n001ZZZZZZZZZZZZ"
+      aria-describedby="query-helper-hint"
+    ></textarea>
+    <p id="query-helper-hint" class="form-hint">
+      Separate Account IDs by commas, spaces, or new lines. At least one ID is required to build the queries.
+    </p>
+    <div class="form-actions">
+      <button type="submit" class="primary">Generate queries</button>
+      <button type="reset" class="secondary" id="clear-queries">Clear</button>
+    </div>
+  </form>
+  <div id="query-results" class="query-results" aria-live="polite"></div>
+</section>
+
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
