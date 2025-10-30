@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="steps" aria-label="Guided steps">
+  <button class="step-button active" data-target="import-step">1. Import CSV files</button>
+  <button class="step-button" data-target="alerts-step">2. Review alerts</button>
+</section>
+
+<section id="import-step" class="panel active" aria-labelledby="import-heading">
+  <h2 id="import-heading">Step 1 &mdash; Import Salesforce extracts</h2>
+  <p>
+    Provide the CSV exports for each Salesforce object. Every upload refreshes the in-memory data
+    store and rebuilds the relationships between Accounts, Contacts, Individuals, Contact Points, and AccountContactRelations.
+  </p>
+  <form id="import-form" enctype="multipart/form-data">
+    <div class="form-grid">
+      {% for entity in entities %}
+      <label class="file-input">
+        <span class="label-text">{{ entity.replace('_', ' ').title() }}</span>
+        <input type="file" name="{{ entity }}" accept=".csv" />
+      </label>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="primary">Upload and rebuild</button>
+      <button type="reset" class="secondary">Clear selections</button>
+    </div>
+  </form>
+  <div id="import-feedback" role="status" aria-live="polite" class="feedback"></div>
+</section>
+
+<section id="alerts-step" class="panel" aria-labelledby="alerts-heading">
+  <h2 id="alerts-heading">Step 2 &mdash; Investigate generated alerts</h2>
+  <p>
+    After the import completes, use this dashboard to understand potential data quality issues.
+    The default alerts focus on duplicate roles, missing roles, conflicting roles, and duplicate contact points.
+  </p>
+  <div class="alert-controls">
+    <button id="refresh-alerts" class="primary">Refresh alerts</button>
+    <span id="alert-count" class="badge" aria-live="polite"></span>
+  </div>
+  <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+</section>
+{% endblock %}
