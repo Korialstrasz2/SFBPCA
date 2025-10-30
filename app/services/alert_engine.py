@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Any, Dict, Iterable, List
 
 from app.data.data_store import DataStore
 
@@ -9,16 +9,87 @@ def _normalize(value: str) -> str:
 
 
 class AlertEngine:
+    RULE_DEFINITIONS: Iterable[Dict[str, str]] = (
+        {
+            "id": "duplicate_role_same_name",
+            "label": "Duplicate role assignments",
+            "description": (
+                "Flags accounts where multiple contacts share the same role and the same name."
+            ),
+            "handler": "_duplicate_role_same_name_alert",
+            "default_enabled": True,
+        },
+        {
+            "id": "missing_role",
+            "label": "Missing role assignments",
+            "description": "Highlights contacts linked to an account without an assigned role.",
+            "handler": "_missing_role_alert",
+            "default_enabled": True,
+        },
+        {
+            "id": "same_name_different_role",
+            "label": "Role mismatches for the same contact name",
+            "description": (
+                "Detects contacts that appear with multiple roles under the same account."
+            ),
+            "handler": "_same_name_different_role_alert",
+            "default_enabled": True,
+        },
+        {
+            "id": "duplicate_contact_points",
+            "label": "Duplicate contact points",
+            "description": "Finds duplicate phone numbers or email addresses for a single contact.",
+            "handler": "_duplicate_contact_points_alert",
+            "default_enabled": True,
+        },
+    )
+
     def __init__(self, data_store: DataStore) -> None:
         self.data_store = data_store
+        self._default_rule_config = {
+            rule["id"]: bool(rule.get("default_enabled", True))
+            for rule in self.RULE_DEFINITIONS
+        }
+        self._rule_config = dict(self._default_rule_config)
 
     def build_alerts(self) -> List[Dict[str, str]]:
         alerts: List[Dict[str, str]] = []
-        alerts.extend(self._duplicate_role_same_name_alert())
-        alerts.extend(self._missing_role_alert())
-        alerts.extend(self._same_name_different_role_alert())
-        alerts.extend(self._duplicate_contact_points_alert())
+        for rule in self.RULE_DEFINITIONS:
+            rule_id = rule["id"]
+            if not self._rule_config.get(rule_id, True):
+                continue
+            handler_name = rule["handler"]
+            handler = getattr(self, handler_name, None)
+            if not handler:
+                continue
+            alerts.extend(handler())
         return alerts
+
+    def get_rule_configuration(self) -> List[Dict[str, Any]]:
+        configuration: List[Dict[str, Any]] = []
+        for rule in self.RULE_DEFINITIONS:
+            rule_id = rule["id"]
+            configuration.append(
+                {
+                    "id": rule_id,
+                    "label": rule["label"],
+                    "description": rule["description"],
+                    "enabled": self._rule_config.get(rule_id, True),
+                    "default_enabled": self._default_rule_config.get(rule_id, True),
+                }
+            )
+        return configuration
+
+    def update_rule_configuration(self, updates: Dict[str, bool]) -> None:
+        unknown_rules = [rule_id for rule_id in updates if rule_id not in self._rule_config]
+        if unknown_rules:
+            raise ValueError(f"Unknown rule identifiers: {', '.join(sorted(unknown_rules))}")
+
+        for rule_id, enabled in updates.items():
+            self._rule_config[rule_id] = bool(enabled)
+
+    def reset_rule_configuration(self) -> None:
+        self._rule_config = dict(self._default_rule_config)
 
     def _duplicate_role_same_name_alert(self) -> List[Dict[str, str]]:
         alerts: List[Dict[str, str]] = []
