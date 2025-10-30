@@ -29,8 +29,8 @@ The importer expects CSV files exported from Salesforce that contain the followi
 - **Account**: `Id`, `Name`
 - **Contact**: `Id`, `FirstName`, `LastName`, `IndividualId`
 - **Individual**: `Id`, `FirstName`, `LastName`
-- **AccountContactRelation**: `Id`, `AccountId`, `ContactId`, `Role`
-- **ContactPointPhone**: `Id`, `ParentId`, `PhoneNumber`
+- **AccountContactRelation**: `Id`, `AccountId`, `ContactId`, `Roles`
+- **ContactPointPhone**: `Id`, `ParentId`, `TelephoneNumber`
 - **ContactPointEmail**: `Id`, `ParentId`, `EmailAddress`
 
 Each upload fully refreshes the in-memory store and recalculates all relationships.

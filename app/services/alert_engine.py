@@ -28,7 +28,11 @@ class AlertEngine:
                 contact = self.data_store.contacts.get(relation.get("ContactId"))
                 if not contact:
                     continue
-                key = (_normalize(contact.get("FirstName")), _normalize(contact.get("LastName")), _normalize(relation.get("Role")))
+                key = (
+                    _normalize(contact.get("FirstName")),
+                    _normalize(contact.get("LastName")),
+                    _normalize(relation.get("Roles")),
+                )
                 bucket[key].append(contact)
             for (first, last, role), contacts in bucket.items():
                 if not role:
@@ -47,7 +51,7 @@ class AlertEngine:
         alerts: List[Dict[str, str]] = []
         for account_id, relations in self.data_store.account_to_contact_relations.items():
             for relation in relations:
-                role = _normalize(relation.get("Role"))
+                role = _normalize(relation.get("Roles"))
                 if role:
                     continue
                 contact = self.data_store.contacts.get(relation.get("ContactId"))
@@ -70,7 +74,7 @@ class AlertEngine:
                 if not contact:
                     continue
                 name_key = (_normalize(contact.get("FirstName")), _normalize(contact.get("LastName")))
-                role = _normalize(relation.get("Role"))
+                role = _normalize(relation.get("Roles"))
                 if role:
                     name_to_roles[name_key].add(role)
             for (first, last), roles in name_to_roles.items():
@@ -89,7 +93,10 @@ class AlertEngine:
     def _duplicate_contact_points_alert(self) -> List[Dict[str, str]]:
         alerts: List[Dict[str, str]] = []
         for contact_id, contact in self.data_store.contacts.items():
-            phone_values = self._collect_values(self.data_store.get_phones_for_contact(contact_id), ["PhoneNumber", "Phone"])
+            phone_values = self._collect_values(
+                self.data_store.get_phones_for_contact(contact_id),
+                ["TelephoneNumber", "Phone"],
+            )
             email_values = self._collect_values(self.data_store.get_emails_for_contact(contact_id), ["EmailAddress", "Email"])
 
             duplicate_phones = self._find_duplicates(phone_values)

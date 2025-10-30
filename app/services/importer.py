@@ -12,8 +12,8 @@ class CSVImporter:
         "accounts": ["Id", "Name"],
         "contacts": ["Id", "FirstName", "LastName", "IndividualId"],
         "individuals": ["Id", "FirstName", "LastName"],
-        "account_contact_relations": ["Id", "AccountId", "ContactId", "Role"],
-        "contact_point_phones": ["Id", "ParentId", "PhoneNumber"],
+        "account_contact_relations": ["Id", "AccountId", "ContactId", "Roles"],
+        "contact_point_phones": ["Id", "ParentId", "TelephoneNumber"],
         "contact_point_emails": ["Id", "ParentId", "EmailAddress"],
     }
 
