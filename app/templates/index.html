@@ -30,7 +30,6 @@
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
-  <button class="step-button" data-target="alerts-config-step">3. Configure alerts</button>
 </section>
 
 <section id="import-step" class="panel active" aria-labelledby="import-heading">
@@ -67,27 +66,5 @@
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
   <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
-</section>
-
-<section id="alerts-config-step" class="panel" aria-labelledby="alerts-config-heading">
-  <h2 id="alerts-config-heading">Step 3 &mdash; Configure alert rules</h2>
-  <p>
-    Toggle the alert rules that run against the imported Salesforce data. Disabling a rule immediately
-    removes its alerts from the review tab.
-  </p>
-  <form id="alert-config-form" class="alert-config-form">
-    <div id="alert-config-list" class="alert-config-grid" role="list"></div>
-    <div class="form-actions alert-config-actions">
-      <button type="submit" class="primary">Save changes</button>
-      <button type="button" class="secondary" id="reset-alert-config">Reset to defaults</button>
-    </div>
-    <div
-      id="alert-config-feedback"
-      class="feedback"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    ></div>
-  </form>
 </section>
 {% endblock %}
