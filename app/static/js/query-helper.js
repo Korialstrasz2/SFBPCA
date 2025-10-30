@@ -16,15 +16,15 @@ const QueryHelper = (() => {
         ids,
       )})) ORDER BY LastName, FirstName`,
     account_contact_relations: (ids) =>
-      `SELECT Id, AccountId, ContactId, Role FROM AccountContactRelation WHERE AccountId IN (${formatIds(
+      `SELECT Id, AccountId, ContactId, Roles FROM AccountContactRelation WHERE AccountId IN (${formatIds(
         ids,
       )}) ORDER BY AccountId`,
     contact_point_phones: (ids) =>
-      `SELECT Id, ParentId, PhoneNumber FROM ContactPointPhone WHERE ParentId IN (SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(
+      `SELECT Id, ParentId, TelephoneNumber FROM ContactPointPhone WHERE ParentId IN (SELECT IndividualId FROM Contact WHERE IndividualId != null AND AccountId IN (${formatIds(
         ids,
       )})) ORDER BY ParentId`,
     contact_point_emails: (ids) =>
-      `SELECT Id, ParentId, EmailAddress FROM ContactPointEmail WHERE ParentId IN (SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(
+      `SELECT Id, ParentId, EmailAddress FROM ContactPointEmail WHERE ParentId IN (SELECT IndividualId FROM Contact WHERE IndividualId != null AND AccountId IN (${formatIds(
         ids,
       )})) ORDER BY ParentId`,
   };
