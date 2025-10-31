@@ -30,6 +30,7 @@
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
+  <button class="step-button" data-target="alert-config-step">3. Configure alerts</button>
 </section>
 
 <section id="import-step" class="panel active" aria-labelledby="import-heading">
@@ -66,5 +67,61 @@
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
   <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+</section>
+
+<section id="alert-config-step" class="panel" aria-labelledby="alert-config-heading">
+  <h2 id="alert-config-heading">Step 3 &mdash; Configure alert definitions</h2>
+  <p>
+    Review, customize, or create alert definitions. Each definition includes the logic that powers the alert,
+    making it easy to adjust thresholds or build entirely new checks tailored to your team.
+  </p>
+  <div class="alert-config">
+    <div class="alert-config__list" aria-live="polite">
+      <div class="alert-config__header">
+        <h3>Available alerts</h3>
+        <button id="new-alert-definition" class="secondary">New alert</button>
+      </div>
+      <ul id="alert-definition-list" class="definition-list"></ul>
+    </div>
+    <div class="alert-config__editor">
+      <form id="alert-definition-form" class="definition-form" novalidate>
+        <div class="definition-form__heading">
+          <h3 id="alert-definition-form-title">Create alert definition</h3>
+          <label class="toggle">
+            <input type="checkbox" id="alert-enabled" name="enabled" checked />
+            <span>Enabled</span>
+          </label>
+        </div>
+        <div class="form-field">
+          <label for="alert-id">Identifier</label>
+          <input id="alert-id" name="id" type="text" required autocomplete="off" />
+          <p class="field-hint">Unique name used to reference the alert definition.</p>
+        </div>
+        <div class="form-field">
+          <label for="alert-name">Display name</label>
+          <input id="alert-name" name="name" type="text" required />
+        </div>
+        <div class="form-field">
+          <label for="alert-description">Description</label>
+          <textarea id="alert-description" name="description" rows="2"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="alert-logic-type">Logic type</label>
+          <select id="alert-logic-type" name="logic_type"></select>
+          <p id="alert-logic-help" class="field-hint"></p>
+        </div>
+        <div id="alert-parameter-fields" class="parameter-fields" aria-live="polite"></div>
+        <div class="form-field">
+          <label for="alert-logic-preview">Logic preview</label>
+          <textarea id="alert-logic-preview" class="code" rows="6" readonly></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="primary">Save alert</button>
+          <button type="button" id="delete-alert-definition" class="danger" hidden>Delete</button>
+        </div>
+        <p id="alert-definition-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
 </section>
 {% endblock %}

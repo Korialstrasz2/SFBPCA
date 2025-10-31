@@ -21,7 +21,36 @@ const AlertsModule = (() => {
     const fragment = document.createDocumentFragment();
     alerts.forEach((alert) => {
       const item = document.createElement('li');
-      item.innerHTML = `<div class="alert-type">${alert.type}</div><div class="alert-message">${alert.message}</div>`;
+
+      const header = document.createElement('div');
+      header.className = 'alert-type';
+      header.textContent = alert.type || 'Alert';
+      item.appendChild(header);
+
+      const message = document.createElement('div');
+      message.className = 'alert-message';
+      message.textContent = alert.message || '';
+      item.appendChild(message);
+
+      if (alert.definitionId) {
+        item.dataset.definitionId = alert.definitionId;
+      }
+
+      if (alert.logic) {
+        const details = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = alert.definitionId
+          ? `View logic (${alert.definitionId})`
+          : 'View logic';
+        details.appendChild(summary);
+
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(alert.logic, null, 2);
+        details.appendChild(pre);
+
+        item.appendChild(details);
+      }
+
       fragment.appendChild(item);
     });
 

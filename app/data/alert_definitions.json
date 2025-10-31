@@ -1,0 +1,62 @@
+[
+  {
+    "id": "duplicate_role_same_name",
+    "name": "Duplicate role for the same contact name",
+    "description": "Flags accounts that have multiple contacts with the same name assigned to the same role.",
+    "enabled": true,
+    "logic": {
+      "type": "duplicate_role_same_name",
+      "parameters": {
+        "min_count": 2
+      }
+    }
+  },
+  {
+    "id": "missing_role_assignment",
+    "name": "Missing contact role",
+    "description": "Alerts when an account-contact relationship does not specify a role.",
+    "enabled": true,
+    "logic": {
+      "type": "missing_role",
+      "parameters": {}
+    }
+  },
+  {
+    "id": "same_name_different_roles",
+    "name": "Same contact name with different roles",
+    "description": "Highlights contacts with the same name assigned to multiple roles for a single account.",
+    "enabled": true,
+    "logic": {
+      "type": "same_name_different_role",
+      "parameters": {
+        "min_unique_roles": 2
+      }
+    }
+  },
+  {
+    "id": "duplicate_contact_phone",
+    "name": "Duplicate contact phone numbers",
+    "description": "Detects duplicate phone numbers for a contact.",
+    "enabled": true,
+    "logic": {
+      "type": "duplicate_contact_point",
+      "parameters": {
+        "channel": "phone",
+        "min_count": 2
+      }
+    }
+  },
+  {
+    "id": "duplicate_contact_email",
+    "name": "Duplicate contact email addresses",
+    "description": "Detects duplicate email addresses for a contact.",
+    "enabled": true,
+    "logic": {
+      "type": "duplicate_contact_point",
+      "parameters": {
+        "channel": "email",
+        "min_count": 2
+      }
+    }
+  }
+]
