@@ -1,0 +1,56 @@
+[
+  {
+    "id": "duplicate_role_same_name",
+    "name": "Duplicate role for the same contact",
+    "description": "Alert when an account lists the same contact multiple times with the same role.",
+    "logic_id": "duplicate_role_same_name",
+    "enabled": true,
+    "type_template": null,
+    "message_template": null,
+    "parameters": {}
+  },
+  {
+    "id": "missing_role",
+    "name": "Missing role on account contact",
+    "description": "Alert when a contact linked to an account is missing a role.",
+    "logic_id": "missing_role",
+    "enabled": true,
+    "type_template": null,
+    "message_template": null,
+    "parameters": {}
+  },
+  {
+    "id": "same_name_different_role",
+    "name": "Conflicting roles for same contact name",
+    "description": "Alert when the same contact name appears with multiple roles for an account.",
+    "logic_id": "same_name_different_role",
+    "enabled": true,
+    "type_template": null,
+    "message_template": null,
+    "parameters": {}
+  },
+  {
+    "id": "duplicate_contact_points_phone",
+    "name": "Duplicate phone numbers",
+    "description": "Alert when a contact has repeated phone numbers.",
+    "logic_id": "duplicate_contact_points",
+    "enabled": true,
+    "type_template": "Duplicate phone",
+    "message_template": "Contact {contact_name} has duplicate phone numbers: {duplicate_value_list}.",
+    "parameters": {
+      "value_kind": "phone"
+    }
+  },
+  {
+    "id": "duplicate_contact_points_email",
+    "name": "Duplicate email addresses",
+    "description": "Alert when a contact has repeated email addresses.",
+    "logic_id": "duplicate_contact_points",
+    "enabled": true,
+    "type_template": "Duplicate email",
+    "message_template": "Contact {contact_name} has duplicate email addresses: {duplicate_value_list}.",
+    "parameters": {
+      "value_kind": "email"
+    }
+  }
+]
