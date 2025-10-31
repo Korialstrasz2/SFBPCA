@@ -21,37 +21,7 @@ const AlertsModule = (() => {
     const fragment = document.createDocumentFragment();
     alerts.forEach((alert) => {
       const item = document.createElement('li');
-
-      const type = document.createElement('div');
-      type.className = 'alert-type';
-      type.textContent = alert.type || 'Alert';
-
-      const message = document.createElement('div');
-      message.className = 'alert-message';
-      message.textContent = alert.message || '';
-
-      const meta = document.createElement('div');
-      meta.className = 'alert-meta';
-      const ruleName = alert.name || alert.logic_id || 'Custom alert';
-      const logicId = alert.logic_id ? ` (${alert.logic_id})` : '';
-      meta.textContent = `Rule: ${ruleName}${logicId}`;
-
-      item.appendChild(type);
-      item.appendChild(message);
-      item.appendChild(meta);
-
-      if (alert.context && Object.keys(alert.context).length > 0) {
-        const details = document.createElement('details');
-        details.className = 'alert-context';
-        const summary = document.createElement('summary');
-        summary.textContent = 'View data context';
-        const contextPre = document.createElement('pre');
-        contextPre.textContent = JSON.stringify(alert.context, null, 2);
-        details.appendChild(summary);
-        details.appendChild(contextPre);
-        item.appendChild(details);
-      }
-
+      item.innerHTML = `<div class="alert-type">${alert.type}</div><div class="alert-message">${alert.message}</div>`;
       fragment.appendChild(item);
     });
 
