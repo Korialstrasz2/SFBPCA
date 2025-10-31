@@ -31,6 +31,22 @@ def create_app() -> Flask:
         alerts = alert_engine.build_alerts()
         return jsonify({"alerts": alerts})
 
+    @app.get("/alert-definitions")
+    def list_alert_definitions():
+        return jsonify({"alerts": alert_engine.get_definitions()})
+
+    @app.post("/alert-definitions")
+    def save_alert_definitions():
+        payload = request.get_json(silent=True) or {}
+        alerts = payload.get("alerts")
+        if not isinstance(alerts, list):
+            return jsonify({"error": "Payload must include an 'alerts' list"}), 400
+        try:
+            alert_engine.save_definitions(alerts)
+        except Exception as exc:  # pragma: no cover - returned to the UI
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"alerts": alert_engine.get_definitions()})
+
     @app.get("/health")
     def health():
         return jsonify({"status": "ok"})
