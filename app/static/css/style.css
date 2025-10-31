@@ -483,6 +483,17 @@ button.secondary:hover {
   gap: 0.35rem;
 }
 
+.form-field--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-field--inline .toggle {
+  flex-shrink: 0;
+}
+
 .form-field input,
 .form-field textarea,
 .form-field select {
@@ -503,6 +514,13 @@ button.secondary:hover {
   color: #f8fafc;
 }
 
+.form-field .code.editable {
+  background: #fffdfa;
+  color: #0b1120;
+  border: 1px solid #facc15;
+  box-shadow: inset 0 0 0 1px rgba(250, 204, 21, 0.35);
+}
+
 .field-hint {
   font-size: 0.85rem;
   color: #52606d;
@@ -513,6 +531,10 @@ button.secondary:hover {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.parameter-fields[hidden] {
+  display: none;
 }
 
 .parameter-fields .form-field {

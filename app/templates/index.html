@@ -111,9 +111,22 @@
           <p id="alert-logic-help" class="field-hint"></p>
         </div>
         <div id="alert-parameter-fields" class="parameter-fields" aria-live="polite"></div>
+        <div class="form-field form-field--inline">
+          <label class="toggle" for="alert-logic-raw">
+            <input type="checkbox" id="alert-logic-raw" name="raw_logic" />
+            <span>Edit logic JSON directly</span>
+          </label>
+          <p class="field-hint">
+            Enable this mode to customise alert logic beyond the available parameters. Updates are saved back to the
+            JSON that powers the alert engine.
+          </p>
+        </div>
+        <p id="alert-logic-raw-notice" class="field-hint" hidden>
+          Parameter controls are disabled while editing the raw JSON definition.
+        </p>
         <div class="form-field">
           <label for="alert-logic-preview">Logic preview</label>
-          <textarea id="alert-logic-preview" class="code" rows="6" readonly></textarea>
+          <textarea id="alert-logic-preview" class="code" rows="6" readonly aria-describedby="alert-logic-raw-notice"></textarea>
         </div>
         <div class="form-actions">
           <button type="submit" class="primary">Save alert</button>

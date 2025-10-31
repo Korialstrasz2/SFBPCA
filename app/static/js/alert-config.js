@@ -13,11 +13,26 @@ const AlertConfigModule = (() => {
   const logicHelp = document.getElementById('alert-logic-help');
   const parameterFieldsContainer = document.getElementById('alert-parameter-fields');
   const logicPreview = document.getElementById('alert-logic-preview');
+  const rawLogicToggle = document.getElementById('alert-logic-raw');
+  const rawLogicNotice = document.getElementById('alert-logic-raw-notice');
 
   const state = {
     definitions: [],
     blueprints: {},
     selectedId: null,
+    editRawLogic: false,
+  };
+
+  const ensureLogicTypeOption = (value, label) => {
+    if (!logicTypeSelect || !value) return;
+    const exists = Array.from(logicTypeSelect.options).some((option) => option.value === value);
+    if (!exists) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label || value;
+      option.dataset.custom = 'true';
+      logicTypeSelect.appendChild(option);
+    }
   };
 
   const getBlueprint = (logicType) => state.blueprints[logicType] || { parameters: {} };
@@ -33,6 +48,100 @@ const AlertConfigModule = (() => {
     feedback.textContent = message;
     feedback.classList.toggle('error', isError);
     feedback.classList.add('visible');
+  };
+
+  const parseLogicPreview = () => {
+    if (!logicPreview) {
+      return { value: {} };
+    }
+    const raw = logicPreview.value.trim();
+    if (!raw) {
+      return { error: 'Logic JSON cannot be empty.' };
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        return { error: 'Logic JSON must describe an object.' };
+      }
+      return { value: parsed };
+    } catch (error) {
+      return { error: 'Logic JSON must be valid JSON.' };
+    }
+  };
+
+  const setRawLogicMode = (enabled, { skipValidation = false } = {}) => {
+    const wasRaw = state.editRawLogic;
+    if (enabled === wasRaw && skipValidation) {
+      return true;
+    }
+
+    let parsedType = '';
+    let parsedParameters = {};
+    if (!enabled && wasRaw && !skipValidation) {
+      const { value, error } = parseLogicPreview();
+      if (!value) {
+        showFeedback(error || 'Logic JSON must be valid before disabling raw mode.', true);
+        if (rawLogicToggle) {
+          rawLogicToggle.checked = true;
+        }
+        return false;
+      }
+      parsedType = typeof value.type === 'string' ? value.type.trim() : '';
+      if (!parsedType) {
+        showFeedback("Logic JSON requires a 'type' property before disabling raw mode.", true);
+        if (rawLogicToggle) {
+          rawLogicToggle.checked = true;
+        }
+        return false;
+      }
+      if (logicTypeSelect && parsedType) {
+        const label = state.blueprints[parsedType]?.label || `Custom (${parsedType})`;
+        ensureLogicTypeOption(parsedType, label);
+        logicTypeSelect.value = parsedType;
+      }
+      parsedParameters = value.parameters && typeof value.parameters === 'object' ? value.parameters : {};
+    }
+
+    if (enabled && !wasRaw && logicPreview && !logicPreview.value) {
+      updateLogicPreview();
+    }
+
+    state.editRawLogic = enabled;
+
+    if (logicPreview) {
+      logicPreview.readOnly = !enabled;
+      logicPreview.classList.toggle('editable', enabled);
+    }
+
+    if (parameterFieldsContainer) {
+      if (enabled) {
+        parameterFieldsContainer.setAttribute('hidden', '');
+      } else {
+        parameterFieldsContainer.removeAttribute('hidden');
+      }
+    }
+
+    if (rawLogicNotice) {
+      rawLogicNotice.hidden = !enabled;
+    }
+
+    if (logicTypeSelect) {
+      logicTypeSelect.disabled = enabled;
+    }
+
+    if (rawLogicToggle) {
+      rawLogicToggle.checked = enabled;
+    }
+
+    if (!enabled && wasRaw && !skipValidation) {
+      renderParameterFields(logicTypeSelect?.value || parsedType, parsedParameters);
+    }
+
+    if (!enabled) {
+      updateLogicPreview();
+    }
+
+    return true;
   };
 
   const convertParameterValue = (meta = {}, rawValue) => {
@@ -71,7 +180,7 @@ const AlertConfigModule = (() => {
 
   const collectParameterValues = ({ includeEmpty = false } = {}) => {
     const values = {};
-    if (!parameterFieldsContainer) {
+    if (!parameterFieldsContainer || state.editRawLogic) {
       return values;
     }
 
@@ -107,7 +216,7 @@ const AlertConfigModule = (() => {
   };
 
   const updateLogicPreview = () => {
-    if (!logicPreview || !logicTypeSelect) return;
+    if (!logicPreview || !logicTypeSelect || state.editRawLogic) return;
     const logicType = logicTypeSelect.value;
     if (!logicType) {
       logicPreview.value = '';
@@ -174,10 +283,39 @@ const AlertConfigModule = (() => {
 
   const renderParameterFields = (logicType, values = {}) => {
     if (!parameterFieldsContainer) return;
+    if (state.editRawLogic) {
+      parameterFieldsContainer.innerHTML = '';
+      return;
+    }
     parameterFieldsContainer.innerHTML = '';
-    const blueprint = getBlueprint(logicType);
+    const hasBlueprint = Boolean(state.blueprints[logicType]);
+    const blueprint = hasBlueprint ? getBlueprint(logicType) : {};
     if (logicHelp) {
-      logicHelp.textContent = blueprint.description || '';
+      if (!logicType) {
+        logicHelp.textContent = '';
+      } else if (hasBlueprint) {
+        logicHelp.textContent = blueprint.description || '';
+      } else {
+        logicHelp.textContent = 'Custom logic type. Use the raw JSON editor to adjust its behaviour.';
+      }
+    }
+
+    if (!logicType) {
+      const notice = document.createElement('p');
+      notice.className = 'field-hint';
+      notice.textContent = 'Select a logic type to configure its parameters.';
+      parameterFieldsContainer.appendChild(notice);
+      updateLogicPreview();
+      return;
+    }
+
+    if (!hasBlueprint) {
+      const notice = document.createElement('p');
+      notice.className = 'field-hint';
+      notice.textContent = 'This logic type does not have parameter controls. Enable raw JSON editing to modify it.';
+      parameterFieldsContainer.appendChild(notice);
+      updateLogicPreview();
+      return;
     }
 
     const parameters = blueprint.parameters || {};
@@ -200,9 +338,9 @@ const AlertConfigModule = (() => {
     updateLogicPreview();
   };
 
-  const populateLogicTypes = () => {
+  const populateLogicTypes = (preferredValue = null) => {
     if (!logicTypeSelect) return;
-    const previousValue = logicTypeSelect.value;
+    const desiredValue = preferredValue ?? logicTypeSelect.value;
     logicTypeSelect.innerHTML = '';
 
     const entries = Object.entries(state.blueprints).sort((a, b) => {
@@ -218,11 +356,17 @@ const AlertConfigModule = (() => {
       logicTypeSelect.appendChild(option);
     });
 
-    const targetValue = entries.some(([value]) => value === previousValue)
-      ? previousValue
-      : entries[0]?.[0] || '';
+    let targetValue = entries[0]?.[0] || '';
+    if (desiredValue) {
+      const exists = entries.some(([value]) => value === desiredValue);
+      if (!exists) {
+        const label = state.blueprints[desiredValue]?.label || `Custom (${desiredValue})`;
+        ensureLogicTypeOption(desiredValue, label);
+      }
+      targetValue = desiredValue;
+    }
+
     logicTypeSelect.value = targetValue;
-    renderParameterFields(targetValue);
   };
 
   const renderDefinitionList = () => {
@@ -307,14 +451,27 @@ const AlertConfigModule = (() => {
       if (!definition) {
         return;
       }
+      const logicType = definition.logic?.type || '';
       formTitle.textContent = `Edit alert: ${definition.name || definition.id}`;
       idInput.value = definition.id || '';
       idInput.readOnly = true;
       nameInput.value = definition.name || '';
       descriptionInput.value = definition.description || '';
       enabledInput.checked = definition.enabled !== false;
-      logicTypeSelect.value = definition.logic?.type || logicTypeSelect.value;
-      renderParameterFields(definition.logic?.type || logicTypeSelect.value, definition.logic?.parameters || {});
+      populateLogicTypes(logicType);
+      const hasBlueprint = Boolean(state.blueprints[logicType]);
+      if (hasBlueprint) {
+        setRawLogicMode(false, { skipValidation: true });
+        logicTypeSelect.value = logicType || logicTypeSelect.value;
+        renderParameterFields(logicTypeSelect.value, definition.logic?.parameters || {});
+        updateLogicPreview();
+      } else {
+        setRawLogicMode(true, { skipValidation: true });
+        logicPreview.value = JSON.stringify(definition.logic || {}, null, 2);
+        if (logicHelp) {
+          logicHelp.textContent = 'Custom logic type. Use the raw JSON editor to adjust its behaviour.';
+        }
+      }
       deleteButton.hidden = false;
     } else {
       formTitle.textContent = 'Create alert definition';
@@ -324,6 +481,8 @@ const AlertConfigModule = (() => {
       descriptionInput.value = '';
       enabledInput.checked = true;
       populateLogicTypes();
+      setRawLogicMode(false, { skipValidation: true });
+      renderParameterFields(logicTypeSelect?.value || '');
       deleteButton.hidden = true;
     }
 
@@ -334,21 +493,44 @@ const AlertConfigModule = (() => {
   const buildPayload = () => {
     const id = idInput.value.trim();
     const name = nameInput.value.trim();
-    const logicType = logicTypeSelect.value;
-    if (!id || !name || !logicType) {
-      throw new Error('Identifier, name, and logic type are required.');
-    }
     const description = descriptionInput.value.trim();
-    const parameters = mergeWithDefaults(logicType, collectParameterValues({ includeEmpty: true }));
+    if (!id || !name) {
+      throw new Error('Identifier and name are required.');
+    }
+    const logicType = logicTypeSelect.value;
+
+    let logic;
+    if (state.editRawLogic) {
+      const { value, error } = parseLogicPreview();
+      if (!value) {
+        throw new Error(error || 'Logic JSON must be valid.');
+      }
+      const parsedType = typeof value.type === 'string' ? value.type.trim() : '';
+      if (!parsedType) {
+        throw new Error("Logic JSON requires a 'type' property.");
+      }
+      ensureLogicTypeOption(parsedType, state.blueprints[parsedType]?.label || `Custom (${parsedType})`);
+      if (logicTypeSelect) {
+        logicTypeSelect.value = parsedType;
+      }
+      logic = value;
+    } else {
+      if (!logicType) {
+        throw new Error('Logic type is required.');
+      }
+      const parameters = mergeWithDefaults(logicType, collectParameterValues({ includeEmpty: true }));
+      logic = {
+        type: logicType,
+        parameters,
+      };
+    }
+
     return {
       id,
       name,
       description,
       enabled: enabledInput.checked,
-      logic: {
-        type: logicType,
-        parameters,
-      },
+      logic,
     };
   };
 
@@ -362,12 +544,13 @@ const AlertConfigModule = (() => {
       const payload = await response.json();
       state.definitions = payload.definitions || [];
       state.blueprints = payload.blueprints || {};
-      populateLogicTypes();
-      renderDefinitionList();
-      if (state.selectedId) {
-        setFormMode('edit', state.selectedId);
+      const selected = state.selectedId
+        ? state.definitions.find((definition) => definition.id === state.selectedId)
+        : null;
+      if (selected) {
+        setFormMode('edit', selected.id);
       } else {
-        updateLogicPreview();
+        setFormMode('create');
       }
     } catch (error) {
       showFeedback(error.message || 'Failed to load alert definitions', true);
@@ -428,6 +611,16 @@ const AlertConfigModule = (() => {
     if (logicTypeSelect) {
       logicTypeSelect.addEventListener('change', () => {
         renderParameterFields(logicTypeSelect.value);
+      });
+    }
+
+    if (rawLogicToggle) {
+      rawLogicToggle.addEventListener('change', () => {
+        const enabled = rawLogicToggle.checked;
+        const success = setRawLogicMode(enabled);
+        if (!success) {
+          rawLogicToggle.checked = !enabled;
+        }
       });
     }
 

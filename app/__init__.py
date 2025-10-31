@@ -110,19 +110,28 @@ def _prepare_definition_payload(
         raise ValueError("Alert definition requires a 'name'")
 
     description = str(payload.get("description", "")).strip()
-    logic = payload.get("logic", {}) or {}
-    if not isinstance(logic, dict):
+    logic_payload = payload.get("logic", {}) or {}
+    if not isinstance(logic_payload, dict):
         raise ValueError("'logic' must be an object")
 
-    logic_type = str(logic.get("type", "")).strip()
+    logic_type = str(logic_payload.get("type", "")).strip()
     if not logic_type:
         raise ValueError("'logic.type' is required")
 
-    parameters = logic.get("parameters", {}) or {}
-    if not isinstance(parameters, dict):
+    raw_parameters = logic_payload.get("parameters", {}) or {}
+    if raw_parameters is None:
+        raw_parameters = {}
+    if not isinstance(raw_parameters, dict):
         raise ValueError("'logic.parameters' must be an object")
 
-    sanitized_parameters = _apply_parameter_defaults(logic_type, parameters, blueprints or {})
+    sanitized_parameters = _apply_parameter_defaults(logic_type, raw_parameters, blueprints or {})
+
+    logic_copy: Dict[str, Any] = dict(logic_payload)
+    logic_copy["type"] = logic_type
+    if sanitized_parameters or "parameters" in logic_payload:
+        logic_copy["parameters"] = sanitized_parameters
+    else:
+        logic_copy.pop("parameters", None)
 
     enabled_value = payload.get("enabled", True)
     if isinstance(enabled_value, str):
@@ -135,10 +144,7 @@ def _prepare_definition_payload(
         "name": name,
         "description": description,
         "enabled": enabled,
-        "logic": {
-            "type": logic_type,
-            "parameters": sanitized_parameters,
-        },
+        "logic": logic_copy,
     }
 
 
