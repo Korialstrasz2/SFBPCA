@@ -30,6 +30,7 @@
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
+  <button class="step-button" data-target="alert-config-step">3. Configure alert logic</button>
 </section>
 
 <section id="import-step" class="panel active" aria-labelledby="import-heading">
@@ -66,5 +67,47 @@
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
   <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+</section>
+
+<section id="alert-config-step" class="panel" aria-labelledby="alert-config-heading">
+  <h2 id="alert-config-heading">Step 3 &mdash; Configure alert logic</h2>
+  <p>
+    Review the active alerts, inspect the Python logic that powers them, and create new checks tailored to your
+    organisation. Saving a change immediately updates the alert engine.
+  </p>
+  <div class="alert-config-layout">
+    <div class="alert-config-list" aria-labelledby="alert-list-heading">
+      <div class="alert-config-list-header">
+        <h3 id="alert-list-heading">Available alerts</h3>
+        <button id="add-alert-definition" class="secondary" type="button">Add alert</button>
+      </div>
+      <ul id="alert-definition-list" class="alert-definition-list" aria-live="polite"></ul>
+    </div>
+    <form id="alert-definition-editor" class="alert-definition-editor" hidden novalidate>
+      <input type="hidden" id="alert-definition-id" />
+      <label for="alert-definition-label">Alert label</label>
+      <input id="alert-definition-label" name="label" type="text" required />
+      <label for="alert-definition-description">Description</label>
+      <textarea id="alert-definition-description" name="description" rows="3" placeholder="Explain what this alert checks"></textarea>
+      <label for="alert-definition-logic">Logic</label>
+      <textarea
+        id="alert-definition-logic"
+        name="logic"
+        rows="14"
+        spellcheck="false"
+        placeholder="def run(data_store, helpers, definition):\n    return []"
+      ></textarea>
+      <p class="form-hint">
+        Logic must define a <code>run(data_store, helpers, definition)</code> function and return a list of
+        dictionaries with <code>type</code> and <code>message</code> keys. Use the helpers to normalise strings and
+        format contacts.
+      </p>
+      <div class="form-actions">
+        <button type="submit" class="primary">Save changes</button>
+        <button type="button" class="danger" id="delete-alert-definition">Delete alert</button>
+      </div>
+    </form>
+  </div>
+  <div id="alert-definition-feedback" class="feedback" role="status" aria-live="polite"></div>
 </section>
 {% endblock %}

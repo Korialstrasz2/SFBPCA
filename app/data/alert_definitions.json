@@ -1,0 +1,28 @@
+{
+  "alerts": [
+    {
+      "id": "duplicate_role_same_name",
+      "label": "Duplicate role for same contact name",
+      "description": "Flags accounts with multiple contacts that share the same name and role.",
+      "logic": "def run(data_store, helpers, definition):\n    alerts = []\n    for account_id, relations in data_store.account_to_contact_relations.items():\n        bucket = {}\n        for relation in relations:\n            contact = data_store.contacts.get(relation.get('ContactId'))\n            if not contact:\n                continue\n            key = (\n                helpers.normalize(contact.get('FirstName')),\n                helpers.normalize(contact.get('LastName')),\n                helpers.normalize(relation.get('Roles')),\n            )\n            bucket.setdefault(key, []).append(contact)\n        for (first, last, role), contacts in bucket.items():\n            if not role:\n                continue\n            if len(contacts) > 1:\n                account_name = helpers.get_account_name(data_store, account_id)\n                formatted_name = f\"{helpers.title_case(first)} {helpers.title_case(last)}\".strip()\n                alerts.append(\n                    {\n                        'type': definition.get('label', 'Alert'),\n                        'message': f\"Account '{account_name}' has {len(contacts)} contacts named {formatted_name} with the role '{role}'.\",\n                    }\n                )\n    return alerts"
+    },
+    {
+      "id": "missing_role",
+      "label": "Missing role on account contact",
+      "description": "Highlights account-contact relationships that do not specify a role.",
+      "logic": "def run(data_store, helpers, definition):\n    alerts = []\n    for account_id, relations in data_store.account_to_contact_relations.items():\n        account_name = helpers.get_account_name(data_store, account_id)\n        for relation in relations:\n            role = helpers.normalize(relation.get('Roles'))\n            if role:\n                continue\n            contact = data_store.contacts.get(relation.get('ContactId'))\n            contact_name = helpers.format_contact_name(contact)\n            alerts.append(\n                {\n                    'type': definition.get('label', 'Alert'),\n                    'message': f\"Contact {contact_name} linked to account '{account_name}' has no assigned role.\",\n                }\n            )\n    return alerts"
+    },
+    {
+      "id": "role_mismatch",
+      "label": "Same contact name with different roles",
+      "description": "Detects contacts that appear with the same name but conflicting roles on a single account.",
+      "logic": "def run(data_store, helpers, definition):\n    alerts = []\n    for account_id, relations in data_store.account_to_contact_relations.items():\n        name_to_roles = {}\n        for relation in relations:\n            contact = data_store.contacts.get(relation.get('ContactId'))\n            if not contact:\n                continue\n            name_key = (\n                helpers.normalize(contact.get('FirstName')),\n                helpers.normalize(contact.get('LastName')),\n            )\n            role = helpers.normalize(relation.get('Roles'))\n            if role:\n                name_to_roles.setdefault(name_key, set()).add(role)\n        for (first, last), roles in name_to_roles.items():\n            if len(roles) > 1:\n                account_name = helpers.get_account_name(data_store, account_id)\n                formatted_name = f\"{helpers.title_case(first)} {helpers.title_case(last)}\".strip()\n                role_list = ', '.join(sorted(helpers.title_case(role) for role in roles))\n                alerts.append(\n                    {\n                        'type': definition.get('label', 'Alert'),\n                        'message': f\"Account '{account_name}' has contact {formatted_name} listed with multiple roles: {role_list}.\",\n                    }\n                )\n    return alerts"
+    },
+    {
+      "id": "duplicate_contact_points",
+      "label": "Duplicate phones or emails on a contact",
+      "description": "Surfaces contacts that have repeated phone numbers or email addresses across their touchpoints.",
+      "logic": "def run(data_store, helpers, definition):\n    alerts = []\n    for contact_id, contact in data_store.contacts.items():\n        phone_values = helpers.collect_values(\n            data_store.get_phones_for_contact(contact_id),\n            ['TelephoneNumber', 'Phone'],\n        )\n        email_values = helpers.collect_values(\n            data_store.get_emails_for_contact(contact_id),\n            ['EmailAddress', 'Email'],\n        )\n        duplicate_phones = helpers.find_duplicates(phone_values)\n        duplicate_emails = helpers.find_duplicates(email_values)\n        if duplicate_phones:\n            alerts.append(\n                {\n                    'type': 'Duplicate phone',\n                    'message': f\"Contact {helpers.format_contact_name(contact)} has duplicate phone numbers: {', '.join(sorted(duplicate_phones))}.\",\n                }\n            )\n        if duplicate_emails:\n            alerts.append(\n                {\n                    'type': 'Duplicate email',\n                    'message': f\"Contact {helpers.format_contact_name(contact)} has duplicate email addresses: {', '.join(sorted(duplicate_emails))}.\",\n                }\n            )\n    return alerts"
+    }
+  ]
+}
