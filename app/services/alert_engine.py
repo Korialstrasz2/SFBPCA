@@ -1,5 +1,7 @@
 from collections import defaultdict
-from typing import Dict, List
+from copy import deepcopy
+from typing import Any, Dict, List, Set
+from uuid import uuid4
 
 from app.data.data_store import DataStore
 
@@ -9,16 +11,143 @@ def _normalize(value: str) -> str:
 
 
 class AlertEngine:
+    DEFAULT_CONFIG: List[Dict[str, Any]] = [
+        {
+            "id": "duplicate_role",
+            "label": "Duplicate role",
+            "description": "Highlight contacts with the same name and role on a single account.",
+            "enabled": True,
+            "kind": "system",
+        },
+        {
+            "id": "missing_role",
+            "label": "Missing role",
+            "description": "Flag linked contacts that are missing a role assignment.",
+            "enabled": True,
+            "kind": "system",
+        },
+        {
+            "id": "role_mismatch",
+            "label": "Role mismatch",
+            "description": "Spot contacts that appear with different roles on the same account.",
+            "enabled": True,
+            "kind": "system",
+        },
+        {
+            "id": "duplicate_contact_points",
+            "label": "Duplicate contact points",
+            "description": "Detect duplicate phone numbers or email addresses for a single contact.",
+            "enabled": True,
+            "kind": "system",
+        },
+    ]
+
     def __init__(self, data_store: DataStore) -> None:
         self.data_store = data_store
+        self._default_map = {entry["id"]: deepcopy(entry) for entry in self.DEFAULT_CONFIG}
+        self._config: List[Dict[str, Any]] = [deepcopy(entry) for entry in self.DEFAULT_CONFIG]
+
+    def get_config(self) -> List[Dict[str, Any]]:
+        return [deepcopy(entry) for entry in self._config]
+
+    def update_config(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        normalised: List[Dict[str, Any]] = []
+        seen: Set[str] = set()
+
+        for entry in entries or []:
+            entry_id_raw = entry.get("id")
+            entry_id = self._clean_identifier(entry_id_raw)
+            if not entry_id:
+                entry_id = f"custom-{uuid4().hex}"
+            if entry_id in seen:
+                continue
+            seen.add(entry_id)
+
+            if entry_id in self._default_map:
+                default_entry = self._default_map[entry_id]
+                normalised.append(
+                    {
+                        **default_entry,
+                        "label": self._clean_text(entry.get("label")) or default_entry["label"],
+                        "description": self._clean_text(entry.get("description")) or default_entry["description"],
+                        "enabled": bool(entry.get("enabled", True)),
+                    }
+                )
+            else:
+                normalised.append(
+                    {
+                        "id": entry_id,
+                        "label": self._clean_text(entry.get("label")) or "Custom alert",
+                        "description": self._clean_text(entry.get("description")),
+                        "message": self._clean_text(entry.get("message"))
+                        or self._clean_text(entry.get("description"))
+                        or "Custom alert message",
+                        "enabled": bool(entry.get("enabled", True)),
+                        "kind": "custom",
+                    }
+                )
+
+        normalised_map = {entry["id"]: entry for entry in normalised}
+        ordered_config: List[Dict[str, Any]] = []
+
+        for default in self.DEFAULT_CONFIG:
+            stored = normalised_map.get(default["id"])
+            if stored is None:
+                previous = next((cfg for cfg in self._config if cfg["id"] == default["id"]), None)
+                stored = deepcopy(previous or default)
+            ordered_config.append(stored)
+
+        for entry in normalised:
+            if entry.get("kind") == "custom":
+                ordered_config.append(entry)
+
+        self._config = [deepcopy(entry) for entry in ordered_config]
+        return self.get_config()
 
     def build_alerts(self) -> List[Dict[str, str]]:
         alerts: List[Dict[str, str]] = []
-        alerts.extend(self._duplicate_role_same_name_alert())
-        alerts.extend(self._missing_role_alert())
-        alerts.extend(self._same_name_different_role_alert())
-        alerts.extend(self._duplicate_contact_points_alert())
+        handler_map = {
+            "duplicate_role": self._duplicate_role_same_name_alert,
+            "missing_role": self._missing_role_alert,
+            "role_mismatch": self._same_name_different_role_alert,
+            "duplicate_contact_points": self._duplicate_contact_points_alert,
+        }
+
+        for entry in self._config:
+            if not entry.get("enabled", True):
+                continue
+            entry_id = entry.get("id")
+            if entry.get("kind") == "custom":
+                message = entry.get("message") or entry.get("description")
+                if message:
+                    alerts.append({"type": entry.get("label", "Custom alert"), "message": message})
+                continue
+
+            handler = handler_map.get(entry_id)
+            if not handler:
+                continue
+            label = entry.get("label") or self._default_map.get(entry_id, {}).get("label", "Alert")
+            for alert in handler():
+                shaped = dict(alert)
+                original_type = shaped.get("type")
+                if label and original_type and original_type != label:
+                    shaped["type"] = f"{label} — {original_type}"
+                else:
+                    shaped["type"] = label or original_type or "Alert"
+                alerts.append(shaped)
         return alerts
+
+    @staticmethod
+    def _clean_text(value: Any) -> str:
+        if value is None:
+            return ""
+        return str(value).strip()
+
+    @staticmethod
+    def _clean_identifier(value: Any) -> str:
+        if value is None:
+            return ""
+        return str(value).strip()
 
     def _duplicate_role_same_name_alert(self) -> List[Dict[str, str]]:
         alerts: List[Dict[str, str]] = []

@@ -30,6 +30,7 @@
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
+  <button class="step-button" data-target="alert-config-step">3. Configure alerts</button>
 </section>
 
 <section id="import-step" class="panel active" aria-labelledby="import-heading">
@@ -66,5 +67,21 @@
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
   <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+</section>
+
+<section id="alert-config-step" class="panel" aria-labelledby="alert-config-heading">
+  <h2 id="alert-config-heading">Step 3 &mdash; Configure alert rules</h2>
+  <p>
+    Review the available alert rules, enable or disable them, and update their descriptions. You can also add
+    custom alerts to highlight manual checks that your team should perform.
+  </p>
+  <form id="alert-config-form" novalidate>
+    <div id="alert-config-list" class="config-list" aria-live="polite"></div>
+    <div class="config-actions">
+      <button type="button" id="add-alert" class="secondary">Add custom alert</button>
+      <button type="submit" id="save-alert-config" class="primary">Save configuration</button>
+    </div>
+  </form>
+  <div id="alert-config-status" class="feedback" role="status" aria-live="polite"></div>
 </section>
 {% endblock %}
