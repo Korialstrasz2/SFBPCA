@@ -31,19 +31,6 @@ def create_app() -> Flask:
         alerts = alert_engine.build_alerts()
         return jsonify({"alerts": alerts})
 
-    @app.get("/alerts/config")
-    def get_alert_configuration():
-        return jsonify({"config": alert_engine.get_config()})
-
-    @app.post("/alerts/config")
-    def update_alert_configuration():
-        payload = request.get_json(silent=True) or {}
-        config_entries = payload.get("config", [])
-        if not isinstance(config_entries, list):
-            return jsonify({"error": "Config payload must be a list"}), 400
-        updated = alert_engine.update_config(config_entries)
-        return jsonify({"config": updated})
-
     @app.get("/health")
     def health():
         return jsonify({"status": "ok"})
