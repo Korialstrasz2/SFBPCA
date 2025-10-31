@@ -30,7 +30,6 @@
 <section class="steps" aria-label="Guided steps">
   <button class="step-button active" data-target="import-step">1. Import CSV files</button>
   <button class="step-button" data-target="alerts-step">2. Review alerts</button>
-  <button class="step-button" data-target="alert-config-step">3. Configure alerts</button>
 </section>
 
 <section id="import-step" class="panel active" aria-labelledby="import-heading">
@@ -67,97 +66,5 @@
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
   <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
-</section>
-
-<section id="alert-config-step" class="panel" aria-labelledby="alert-config-heading">
-  <h2 id="alert-config-heading">Step 3 &mdash; Configure alert rules</h2>
-  <p>
-    Adjust the alert rules that power the investigation view. You can review each rule's logic, enable or disable it,
-    and create custom variations with your own templates or parameters.
-  </p>
-  <div class="alert-config-layout">
-    <aside class="alert-config-list" aria-label="Alert configurations">
-      <div class="alert-config-list__header">
-        <h3>Current alerts</h3>
-        <button id="new-alert-config" class="secondary" type="button">Add alert</button>
-      </div>
-      <ul id="alert-config-items" class="alert-config-items" aria-live="polite"></ul>
-    </aside>
-    <div class="alert-config-editor">
-      <h3 id="alert-config-form-title">Alert details</h3>
-      <form id="alert-config-form" novalidate>
-        <input type="hidden" id="alert-config-id" name="id" />
-        <div class="form-row">
-          <label for="alert-config-name">Name</label>
-          <input id="alert-config-name" name="name" type="text" required placeholder="Duplicate role alert" />
-        </div>
-        <div class="form-row">
-          <label for="alert-config-description">Description</label>
-          <textarea
-            id="alert-config-description"
-            name="description"
-            rows="2"
-            placeholder="Short explanation for the alert"
-          ></textarea>
-        </div>
-        <div class="form-row">
-          <label for="alert-logic">Logic</label>
-          <select id="alert-logic" name="logic_id" required></select>
-          <p id="alert-logic-summary" class="form-hint"></p>
-        </div>
-        <div class="form-row checkbox">
-          <label for="alert-config-enabled">
-            <input id="alert-config-enabled" name="enabled" type="checkbox" checked />
-            Enabled
-          </label>
-        </div>
-        <div class="form-row">
-          <label for="alert-type-template">Type label template</label>
-          <input
-            id="alert-type-template"
-            name="type_template"
-            type="text"
-            placeholder="Duplicate role"
-          />
-          <p class="form-hint">Leave blank to use the default label from the logic.</p>
-        </div>
-        <div class="form-row">
-          <label for="alert-message-template">Message template</label>
-          <textarea
-            id="alert-message-template"
-            name="message_template"
-            rows="3"
-            placeholder="Account '{account_name}' has ..."
-          ></textarea>
-          <p class="form-hint">Use curly brace syntax to reference logic fields. Leave blank for the default message.</p>
-        </div>
-        <div class="form-row">
-          <label for="alert-parameters">Parameters (JSON)</label>
-          <textarea
-            id="alert-parameters"
-            name="parameters"
-            rows="4"
-            placeholder="{\n  &quot;value_kind&quot;: &quot;phone&quot;\n}"
-          ></textarea>
-          <p class="form-hint">Optional filters or overrides that the selected logic supports.</p>
-        </div>
-        <div class="form-actions compact">
-          <button type="submit" class="primary">Save alert</button>
-          <button type="button" id="delete-alert-config" class="danger" aria-label="Delete alert" disabled>
-            Delete
-          </button>
-        </div>
-        <div id="alert-config-status" class="feedback" role="status" aria-live="polite"></div>
-      </form>
-      <section aria-labelledby="logic-details-heading" class="logic-details">
-        <h4 id="logic-details-heading">Logic reference</h4>
-        <p id="logic-description"></p>
-        <div class="logic-context">
-          <h5>Available fields</h5>
-          <pre id="logic-context-fields" aria-live="polite"></pre>
-        </div>
-      </section>
-    </div>
-  </div>
 </section>
 {% endblock %}
