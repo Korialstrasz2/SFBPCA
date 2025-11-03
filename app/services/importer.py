@@ -10,11 +10,21 @@ class CSVImporter:
 
     ENTITY_FIELDS = {
         "accounts": ["Id", "Name"],
-        "contacts": ["Id", "FirstName", "LastName", "IndividualId"],
+        "contacts": [
+            "Id",
+            "FirstName",
+            "LastName",
+            "IndividualId",
+            "FiscalCode__c",
+            "VATNumber__c",
+            "MobilePhone",
+            "HomePhone",
+            "Email",
+        ],
         "individuals": ["Id", "FirstName", "LastName"],
         "account_contact_relations": ["Id", "AccountId", "ContactId", "Roles"],
         "contact_point_phones": ["Id", "ParentId", "TelephoneNumber"],
-        "contact_point_emails": ["Id", "ParentId", "EmailAddress"],
+        "contact_point_emails": ["Id", "ParentId", "EmailAddress", "Type__c"],
     }
 
     def __init__(self, data_store: DataStore) -> None:
