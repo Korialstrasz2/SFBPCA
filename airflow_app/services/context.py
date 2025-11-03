@@ -6,7 +6,7 @@ from app.services.alert_definition_store import AlertDefinitionStore
 from app.services.alert_engine import AlertEngine
 from app.services.importer import CSVImporter
 
-from airflow_app.config import AirflowAppConfig
+from airflow_app.configuration import AirflowAppConfig
 from airflow_app.runtime.state_repository import DataStateRepository
 
 
