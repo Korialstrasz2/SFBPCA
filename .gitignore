@@ -1,4 +1,0 @@
-airflow_runtime/
-venv/
-__pycache__/
-*.pyc
