@@ -1,9 +1,0 @@
-{
-  "airflow_home": "../airflow_home",
-  "working_dir": "../runtime",
-  "source_dir": "../samples",
-  "reports_dir": "",
-  "backup_dir": "",
-  "alert_definition_path": "../../app/data/alert_definitions.json",
-  "data_snapshot_path": "../runtime/data_snapshot.json"
-}

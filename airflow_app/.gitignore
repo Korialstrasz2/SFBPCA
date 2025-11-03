@@ -1,5 +1,0 @@
-runtime/
-airflow_home/
-__pycache__/
-*.db
-logs/
