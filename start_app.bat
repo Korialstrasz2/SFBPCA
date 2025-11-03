@@ -14,7 +14,7 @@ python -m pip install -r requirements.txt
 echo Updating repository...
 git pull
 
-echo Starting Flask application...
-python app.py
+echo Starting application entry point...
+python app.py %*
 
 ENDLOCAL
