@@ -1,0 +1,22 @@
+# Airflow dataset manifest
+# -------------------------
+# Map each Salesforce entity key to either an absolute path or a path relative
+# to the Airflow uploads directory. Keys must match the importer entity names:
+#   - accounts
+#   - contacts
+#   - individuals
+#   - account_contact_relations
+#   - contact_point_phones
+#   - contact_point_emails
+#
+# Example:
+# accounts: sample_data/accounts.csv
+# contacts: sample_data/contacts.csv
+#
+# Leave entries blank to skip optional entities during a run.
+accounts: null
+contacts: null
+individuals: null
+account_contact_relations: null
+contact_point_phones: null
+contact_point_emails: null

@@ -9,7 +9,7 @@ class CSVImporter:
     """Handles CSV ingestion and normalization for Salesforce entities."""
 
     ENTITY_FIELDS = {
-        "accounts": ["Id", "Name"],
+        "accounts": ["Id", "Name", "CustomerMarking__c"],
         "contacts": ["Id", "FirstName", "LastName", "IndividualId"],
         "individuals": ["Id", "FirstName", "LastName"],
         "account_contact_relations": ["Id", "AccountId", "ContactId", "Roles"],
@@ -27,6 +27,20 @@ class CSVImporter:
             if not file_storage or not getattr(file_storage, "filename", ""):
                 continue
             records = self._parse_csv(file_storage)
+            self.data_store.update_records(entity_key, records)
+            summary[entity_key] = len(records)
+        return summary
+
+    def import_from_files(self, files: Dict[str, str]) -> Dict[str, int]:
+        """Import a set of CSV files identified by their entity keys."""
+
+        summary: Dict[str, int] = {}
+        for entity_key in self.ENTITY_FIELDS:
+            path = files.get(entity_key)
+            if not path:
+                continue
+            with open(path, "rb") as handle:
+                records = self._parse_csv(handle)
             self.data_store.update_records(entity_key, records)
             summary[entity_key] = len(records)
         return summary

@@ -1,7 +1,13 @@
 # Salesforce Relationship Inspector
 
-This project provides a small Flask web application that guides the user through importing
-Salesforce CSV extracts and reviewing relationship-driven data quality alerts.
+This project provides two complementary experiences for inspecting Salesforce
+relationship data quality:
+
+1. **Legacy Flask tool** – the original browser-based workflow for importing
+   CSV extracts and reviewing alerts.
+2. **Airflow application** – a configurable orchestration pipeline that loads
+   Salesforce data, refreshes alerts, produces operational reports, creates
+   backups, and stages future data-change automation tasks.
 
 ## Features
 
@@ -19,8 +25,26 @@ Salesforce CSV extracts and reviewing relationship-driven data quality alerts.
 
 1. Create and activate a virtual environment.
 2. Install dependencies: `pip install -r requirements.txt`
-3. Launch the development server: `python app.py`
-4. Open `http://localhost:5000` in your browser.
+3. Launch the entry point: `python app.py`
+4. Choose between the **Legacy Flask tool** or the **Airflow interactive
+   console** when prompted (set `SRI_APP_MODE=legacy` or `SRI_APP_MODE=airflow`
+   to skip the prompt).
+
+The Airflow experience reuses the same core importer and alert engine while
+adding orchestration-specific features:
+
+- **Data loading** – reads CSV locations defined in `airflow_runtime/config/dataset_manifest.yml`.
+- **Alert configuration & triggering** – leverages the existing alert logic and
+  persists results in `airflow_runtime/artifacts/alerts.json`.
+- **Reporting** – writes human-friendly Markdown and machine-readable JSON
+  summaries to `airflow_runtime/reports/`.
+- **Backups** – archives state, configuration, and latest artifacts into
+  timestamped ZIP files under `airflow_runtime/backups/`.
+- **Data changes (STILL TO BE IMPLEMENTED)** – prepares a catalog of contacts
+  that could be reassigned to accounts marked with `CustomerMarking__c = "D1"`.
+
+Run `python -m airflow_app.cli --run-once` to execute the full Airflow pipeline
+without using the interactive menu.
 
 ## Data requirements
 
