@@ -187,6 +187,50 @@ body {
   display: block;
 }
 
+.alert-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alert-guide h3,
+.alert-guide h4 {
+  margin-top: 0;
+  color: #1f4b99;
+}
+
+.alert-guide ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.alert-guide ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.alert-guide pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.alert-guide code {
+  background: rgba(217, 226, 255, 0.35);
+  color: #1f2933;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.35rem;
+  font-size: 0.95em;
+}
+
 .form-grid {
   display: grid;
   gap: 1rem;
