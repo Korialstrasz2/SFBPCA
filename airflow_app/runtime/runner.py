@@ -4,7 +4,7 @@ import json
 import textwrap
 from typing import Callable, Dict, List, Tuple
 
-from airflow_app.config import AirflowAppConfig
+from airflow_app.configuration import AirflowAppConfig
 from airflow_app.dags.salesforce_relationships_dag import build_dag
 from airflow_app.services.alerting import build_and_persist_alerts, load_alert_configuration
 from airflow_app.services.backup import create_backup_archive

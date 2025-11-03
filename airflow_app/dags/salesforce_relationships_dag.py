@@ -5,7 +5,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
-from airflow_app.config import AirflowAppConfig
+from airflow_app.configuration import AirflowAppConfig
 from airflow_app.services.alerting import build_and_persist_alerts, load_alert_configuration
 from airflow_app.services.backup import create_backup_archive
 from airflow_app.services.context import AirflowRuntimeContext
