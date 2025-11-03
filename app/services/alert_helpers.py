@@ -16,6 +16,15 @@ class AlertHelpers:
         return (value or "").strip().title()
 
     @staticmethod
+    def normalize_phone(value: str | None) -> str:
+        if not value:
+            return ""
+        digits = [ch for ch in value if ch.isdigit()]
+        if digits:
+            return "".join(digits)
+        return (value or "").strip().lower()
+
+    @staticmethod
     def format_contact_name(contact: dict | None) -> str:
         if not contact:
             return "Unknown contact"
