@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 from app import create_app
-from airflow_app.cli import main as airflow_cli_main
-from airflow_app.runtime.runner import AirflowAppRunner
+
+if TYPE_CHECKING:  # pragma: no cover - imports only needed for type checking
+    from airflow_app.cli import main as AirflowCliMain
+    from airflow_app.runtime.runner import AirflowAppRunner
 
 
 def run_legacy() -> None:
@@ -14,8 +16,17 @@ def run_legacy() -> None:
 
 
 def run_airflow_interactive() -> None:
-    runner = AirflowAppRunner()
+    from airflow_app.runtime.runner import AirflowAppRunner
+
+    runner: AirflowAppRunner = AirflowAppRunner()
     runner.run_interactive()
+
+
+def run_airflow_cli(args: list[str] | None = None) -> None:
+    from airflow_app.cli import main as airflow_cli_main
+
+    cli_main: AirflowCliMain = airflow_cli_main
+    cli_main(args or [])
 
 
 def select_mode() -> Callable[[], None]:
@@ -25,7 +36,7 @@ def select_mode() -> Callable[[], None]:
     if env_mode in {"airflow", "dag"}:
         return run_airflow_interactive
     if env_mode == "airflow-cli":
-        return lambda: airflow_cli_main([])
+        return lambda: run_airflow_cli([])
 
     prompt = (
         "Select application mode:\n"
@@ -40,7 +51,7 @@ def select_mode() -> Callable[[], None]:
     if choice == "2":
         return run_airflow_interactive
     if choice == "3":
-        return lambda: airflow_cli_main(["--run-once"])
+        return lambda: run_airflow_cli(["--run-once"])
 
     print("Invalid choice. Defaulting to legacy mode.")
     return run_legacy
