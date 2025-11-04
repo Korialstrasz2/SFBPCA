@@ -8,7 +8,7 @@
     },
     {
       "id": "missing_role_on_relation",
-      "label": "Contatti senza ruoli",
+      "label": "Contatti senza ruolo",
       "description": "Contatti collegati ad un account senza un ruolo valorizzato.",
       "logic": "\ndef run(data_store, helpers, definition):\n    alerts = []\n    excluded_role = helpers.normalize(\"Referente SOL-APP\")\n    for account_id, relations in data_store.account_to_contact_relations.items():\n        account_name = helpers.get_account_name(data_store, account_id)\n        for relation in relations:\n            role_raw = relation.get(\"Roles\")\n            role_norm = helpers.normalize(role_raw)\n            if role_norm == excluded_role:\n                continue\n            has_role = False\n            if isinstance(role_raw, str):\n                has_role = bool(role_raw.strip())\n            else:\n                has_role = bool(role_raw)\n            if has_role:\n                continue\n            contact = data_store.contacts.get(relation.get(\"ContactId\"))\n            contact_name = helpers.format_contact_name(contact)\n            alerts.append(\n                {\n                    \"type\": definition.get(\"label\", \"Alert\"),\n                    \"message\": f\"Il contatto {contact_name} collegato all'account '{account_name}' non ha un ruolo valorizzato.\",\n                }\n            )\n    return alerts\n"
     },
