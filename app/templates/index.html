@@ -67,7 +67,66 @@
     <button id="refresh-alerts" class="primary">Refresh alerts</button>
     <span id="alert-count" class="badge" aria-live="polite"></span>
   </div>
-  <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+  <div class="alert-tabs" data-component="alert-tabs">
+    <div class="alert-tablist" role="tablist" aria-label="Alert views">
+      <button
+        type="button"
+        class="alert-tab active"
+        role="tab"
+        id="alert-tab-trigger-details"
+        aria-selected="true"
+        aria-controls="alert-tab-panel-details"
+        data-alert-tab="details"
+      >
+        Details
+      </button>
+      <button
+        type="button"
+        class="alert-tab"
+        role="tab"
+        id="alert-tab-trigger-summary"
+        aria-selected="false"
+        aria-controls="alert-tab-panel-summary"
+        data-alert-tab="summary"
+      >
+        Summary
+      </button>
+    </div>
+    <div
+      id="alert-tab-panel-details"
+      class="alert-tab-panel"
+      role="tabpanel"
+      aria-labelledby="alert-tab-trigger-details"
+    >
+      <ul id="alert-list" class="alert-list" aria-live="polite"></ul>
+    </div>
+    <div
+      id="alert-tab-panel-summary"
+      class="alert-tab-panel"
+      role="tabpanel"
+      aria-labelledby="alert-tab-trigger-summary"
+      hidden
+    >
+      <div class="alert-summary" id="alert-summary">
+        <div class="alert-summary-controls">
+          <button id="download-alerts-csv" class="secondary" type="button" disabled>
+            Download CSV
+          </button>
+        </div>
+        <p id="alert-summary-empty" class="alert-summary-empty">No alerts generated yet.</p>
+        <table id="alert-summary-table" class="alert-summary-table" hidden>
+          <thead>
+            <tr>
+              <th scope="col">Alert type</th>
+              <th scope="col">Description</th>
+              <th scope="col">Triggered</th>
+            </tr>
+          </thead>
+          <tbody id="alert-summary-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="alert-config-step" class="panel" aria-labelledby="alert-config-heading">

@@ -345,11 +345,149 @@ button.secondary:hover {
   padding: 1rem 1.5rem;
   border-radius: 0.75rem;
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .alert-list li .alert-type {
   font-weight: 700;
   color: #1f4b99;
+}
+
+.alert-list li .alert-message {
+  margin: 0;
+}
+
+.alert-tabs {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.alert-tablist {
+  display: inline-flex;
+  gap: 0.75rem;
+  background: #eef2ff;
+  padding: 0.5rem;
+  border-radius: 999px;
+  align-self: flex-start;
+}
+
+.alert-tab {
+  border: none;
+  background: transparent;
+  color: #1f4b99;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.alert-tab:hover,
+.alert-tab:focus-visible {
+  background: rgba(31, 75, 153, 0.1);
+  outline: none;
+}
+
+.alert-tab.active {
+  background: #1f4b99;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(31, 75, 153, 0.2);
+}
+
+.alert-tab-panel {
+  display: block;
+}
+
+.alert-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.alert-summary-controls {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.alert-summary-controls .secondary[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.alert-summary-empty {
+  margin: 0;
+  padding: 1rem;
+  background: #f1f5f9;
+  border-radius: 0.75rem;
+  color: #52606d;
+}
+
+.alert-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.alert-summary-table th,
+.alert-summary-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.alert-summary-table thead {
+  background: #1f4b99;
+  color: #fff;
+}
+
+.alert-summary-table tbody tr:nth-child(even) {
+  background: rgba(31, 75, 153, 0.06);
+}
+
+.alert-objects {
+  border-radius: 0.5rem;
+  background: #fff;
+  border: 1px solid #d9e2ec;
+  padding: 0.5rem 0.75rem;
+}
+
+.alert-objects summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #1f4b99;
+  outline: none;
+}
+
+.alert-objects summary:focus-visible {
+  outline: 2px solid #1f4b99;
+  outline-offset: 4px;
+}
+
+.alert-objects-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.alert-objects-list li {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.95rem;
+}
+
+.alert-objects-term {
+  font-weight: 600;
+  color: #334155;
 }
 
 [hidden] {
