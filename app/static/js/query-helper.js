@@ -9,52 +9,50 @@ const QueryHelper = (() => {
 
 const SOQL_BUILDERS = {
   accounts: (ids) =>
-    `SELECT Id, Name FROM Account WHERE Id IN (${formatIds(ids)}) ORDER BY Name`,
+    `SELECT Id, Name
+     FROM Account
+     WHERE Id IN (${formatIds(ids)})
+     ORDER BY Name`,
 
+  // Contacts linked to those accounts through AccountContactRelation
   contacts: (ids) =>
-    `SELECT Id, FirstName, LastName, IndividualId, AccountId, FiscalCode__c, VATNumber__c, MobilePhone, HomePhone, Email
+    `SELECT Id, FirstName, LastName, IndividualId, AccountId, FiscalCode__c,
+            VATNumber__c, MobilePhone, HomePhone, Email
      FROM Contact
      WHERE Id IN (
-       SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(ids)})
+       SELECT ContactId FROM AccountContactRelation
+       WHERE AccountId IN (${formatIds(ids)})
      )
      ORDER BY LastName, FirstName`,
 
-  individuals: (ids) =>
-    `SELECT Id, FirstName, LastName
-     FROM Individual
-     WHERE Id IN (
-       SELECT IndividualId FROM Contact
-       WHERE IndividualId != null
-         AND Id IN (SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(ids)}))
-     )
-     ORDER BY LastName, FirstName`,
+    individuals: (ids) =>
+      `SELECT Id, FirstName, LastName
+      FROM Individual
+      WHERE Id IN (SELECT IndividualId FROM Contact WHERE AccountId IN (${formatIds(
+        ids,
+      )})) ORDER BY LastName, FirstName`,
 
+  // AccountContactRelation stays the same
   account_contact_relations: (ids) =>
     `SELECT Id, AccountId, ContactId, Roles
      FROM AccountContactRelation
      WHERE AccountId IN (${formatIds(ids)})
      ORDER BY AccountId`,
 
-  contact_point_phones: (ids) =>
-    `SELECT Id, ParentId, TelephoneNumber
-     FROM ContactPointPhone
-     WHERE ParentId IN (
-       SELECT IndividualId FROM Contact
-       WHERE IndividualId != null
-         AND Id IN (SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(ids)}))
-     )
-     ORDER BY ParentId`,
-
-  contact_point_emails: (ids) =>
-    `SELECT Id, ParentId, EmailAddress, Type__c
-     FROM ContactPointEmail
-     WHERE ParentId IN (
-       SELECT IndividualId FROM Contact
-       WHERE IndividualId != null
-         AND Id IN (SELECT ContactId FROM AccountContactRelation WHERE AccountId IN (${formatIds(ids)}))
-     )
-     ORDER BY ParentId`,
+    contact_point_phones: (ids) =>
+      `SELECT Id, ParentId, TelephoneNumber
+      FROM ContactPointPhone
+      WHERE ParentId IN (SELECT IndividualId FROM Contact WHERE IndividualId != null AND AccountId IN (${formatIds(
+        ids,
+      )})) ORDER BY ParentId`,
+    contact_point_emails: (ids) =>
+      `SELECT Id, ParentId, EmailAddress, Type__c
+      FROM ContactPointEmail
+      WHERE ParentId IN (SELECT IndividualId FROM Contact WHERE IndividualId != null AND AccountId IN (${formatIds(
+        ids,
+      )})) ORDER BY ParentId`,
 };
+
   const TITLES = {
     accounts: 'Account',
     contacts: 'Contact',
