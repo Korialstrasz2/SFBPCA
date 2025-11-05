@@ -19,8 +19,8 @@ class AlertEngine:
         self.data_store = data_store
         self.definition_store = definition_store or AlertDefinitionStore()
 
-    def build_alerts(self) -> List[Dict[str, str]]:
-        alerts: List[Dict[str, str]] = []
+    def build_alerts(self) -> List[Dict[str, Any]]:
+        alerts: List[Dict[str, Any]] = []
         definitions = self.definition_store.load_alerts()
         for definition in definitions:
             try:
@@ -28,13 +28,41 @@ class AlertEngine:
                 result = run(self.data_store, AlertHelpers(), definition)
                 if not isinstance(result, list):
                     raise TypeError("Alert logic must return a list of alert dictionaries")
-                alerts.extend(result)
+                for entry in result:
+                    if not isinstance(entry, dict):
+                        raise TypeError("Each alert returned by logic must be a dictionary")
+                    alert = dict(entry)
+                    label = definition.get("label") or definition.get("id") or "Alert"
+                    alert.setdefault("type", label)
+                    alert["definition_id"] = definition.get("id")
+                    alert["description"] = definition.get("description", "")
+                    if "summary" not in alert:
+                        alert["summary"] = alert.get("message", "")
+                    objects = alert.get("objects")
+                    if not isinstance(objects, dict):
+                        objects = {}
+                    normalised_objects: Dict[str, List[str]] = {}
+                    for key, value in objects.items():
+                        if value is None:
+                            continue
+                        if isinstance(value, (list, tuple, set)):
+                            items = [str(item) for item in value if item]
+                        else:
+                            items = [str(value)] if value else []
+                        if items:
+                            normalised_objects[str(key)] = sorted(dict.fromkeys(items))
+                    alert["objects"] = normalised_objects
+                    alerts.append(alert)
             except Exception as exc:  # pragma: no cover - surfaced to the UI
                 label = definition.get("label") or definition.get("id") or "Unknown alert"
                 alerts.append(
                     {
                         "type": f"{label} (error)",
                         "message": f"Alert logic error: {exc}",
+                        "definition_id": definition.get("id"),
+                        "description": definition.get("description", ""),
+                        "summary": f"Alert logic error: {exc}",
+                        "objects": {},
                     }
                 )
         return alerts
