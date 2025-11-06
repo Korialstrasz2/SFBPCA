@@ -1,11 +1,6 @@
-"""Entry point for the alternate Flask application."""
+"""Compatibilità: entry point che rimanda a modern_app.main."""
 
-from __future__ import annotations
-
-from new_app import create_app
-
-
-app = create_app()
+from modern_app.main import app
 
 
 if __name__ == "__main__":

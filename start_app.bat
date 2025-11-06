@@ -16,12 +16,12 @@ git pull
 
 echo Choose the application to launch:
 echo   1 ^) Original Salesforce Relationship Inspector
-echo   2 ^) Alternate Relationship Companion
+echo   2 ^) Companion Salesforce moderno
 set /p APP_CHOICE=Select option (1/2): 
 
 if /I "!APP_CHOICE!"=="2" (
-    echo Starting alternate Flask application...
-    python new_main.py
+    echo Avvio del Companion Salesforce moderno...
+    python -m modern_app.main
 ) else (
     echo Starting original Flask application...
     python app.py
