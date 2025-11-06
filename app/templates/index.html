@@ -50,12 +50,44 @@
       {% endfor %}
     </div>
     <div class="form-actions">
+      <button type="button" class="secondary" id="bulk-file-trigger">Seleziona tutti i file</button>
       <button type="submit" class="primary">Upload and rebuild</button>
       <button type="reset" class="secondary">Clear selections</button>
     </div>
+    <input type="file" id="bulk-file-input" accept=".csv" multiple hidden />
   </form>
   <div id="import-feedback" role="status" aria-live="polite" class="feedback"></div>
 </section>
+
+<div
+  id="bulk-match-modal"
+  class="modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="bulk-match-title"
+  hidden
+>
+  <div class="modal-content">
+    <h3 id="bulk-match-title">Associazione automatica dei file</h3>
+    <p id="bulk-match-summary" class="modal-summary"></p>
+    <div class="modal-groups">
+      <div class="modal-group" id="bulk-match-assigned-group" hidden>
+        <h4 id="bulk-match-assigned-title">File associati</h4>
+        <ul id="bulk-match-assigned" class="modal-list"></ul>
+      </div>
+      <div class="modal-group" id="bulk-match-unmatched-group" hidden>
+        <h4 id="bulk-match-unmatched-title">File non riconosciuti</h4>
+        <ul id="bulk-match-unmatched" class="modal-list"></ul>
+      </div>
+    </div>
+    <button type="button" class="primary" id="bulk-match-close">Chiudi</button>
+  </div>
+</div>
+
+<script>
+  window.APP_CONFIG = window.APP_CONFIG || {};
+  window.APP_CONFIG.entityFields = {{ entity_fields | tojson }};
+</script>
 
 <section id="alerts-step" class="panel" aria-labelledby="alerts-heading">
   <h2 id="alerts-heading">Step 2 &mdash; Investigate generated alerts</h2>

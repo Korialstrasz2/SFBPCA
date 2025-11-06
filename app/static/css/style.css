@@ -199,6 +199,79 @@ body {
   color: #1f4b99;
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1000;
+}
+
+.modal[hidden] {
+  display: none;
+}
+
+.modal-content {
+  background: #ffffff;
+  color: #1f2933;
+  border-radius: 1rem;
+  max-width: 480px;
+  width: min(480px, 100%);
+  padding: 2rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal-summary {
+  margin: 0;
+  color: #52606d;
+}
+
+.modal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.modal-group[hidden] {
+  display: none;
+}
+
+.modal-group h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #1f4b99;
+}
+
+.modal-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+  border: 1px solid #d2dae3;
+}
+
+.modal-list li strong {
+  color: #1f4b99;
+}
+
 .alert-guide ul {
   margin: 0;
   padding-left: 1.25rem;

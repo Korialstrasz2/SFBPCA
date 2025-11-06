@@ -15,7 +15,11 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return render_template("index.html", entities=list(importer.ENTITY_FIELDS.keys()))
+        return render_template(
+            "index.html",
+            entities=list(importer.ENTITY_FIELDS.keys()),
+            entity_fields=importer.ENTITY_FIELDS,
+        )
 
     @app.post("/import")
     def import_data():
