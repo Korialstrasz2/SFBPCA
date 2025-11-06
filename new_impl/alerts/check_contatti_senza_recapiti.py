@@ -21,11 +21,11 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
 
     for contact, _roles in iter_contacts(account_context):
         contact_id = contact["Id"]
+        has_phone_general = bool((contact.get("Phone") or "").strip())
         has_mobile = bool((contact.get("MobilePhone") or "").strip())
-        has_home = bool((contact.get("HomePhone") or "").strip())
         has_email = bool((contact.get("Email") or "").strip())
 
-        if has_mobile or has_home or has_email:
+        if has_mobile or has_email or has_phone_general:
             continue
 
         contact_name = DATA_STORE.resolve_contact_name(contact_id)
