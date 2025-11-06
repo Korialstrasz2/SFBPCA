@@ -14,7 +14,17 @@ python -m pip install -r requirements.txt
 echo Updating repository...
 git pull
 
-echo Starting Flask application...
-python app.py
+echo Choose the application to launch:
+echo   1 ^) Original Salesforce Relationship Inspector
+echo   2 ^) Alternate Relationship Companion
+set /p APP_CHOICE=Select option (1/2): 
+
+if /I "!APP_CHOICE!"=="2" (
+    echo Starting alternate Flask application...
+    python new_main.py
+) else (
+    echo Starting original Flask application...
+    python app.py
+)
 
 ENDLOCAL
