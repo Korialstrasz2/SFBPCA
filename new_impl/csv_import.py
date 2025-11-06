@@ -1,4 +1,4 @@
-"""CSV import helper dedicated to the alternate application."""
+"""Coordinatore di import dei CSV per la nuova applicazione."""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from typing import Dict, Iterable, List, Optional
 
 from werkzeug.datastructures import FileStorage
 
-from new_data_structure_and_store import DATA_STORE, SalesforceRelationshipStore
+from .data_store import DATA_STORE, SalesforceRelationshipStore
 
 
 class CSVImportCoordinator:
-    """Reads uploaded CSV files and updates the relationship store."""
+    """Legge i file CSV caricati e aggiorna l'archivio relazionale."""
 
     EXPECTED_COLUMNS: Dict[str, Iterable[str]] = {
         "accounts": ("Id", "Name"),
@@ -37,7 +37,7 @@ class CSVImportCoordinator:
         self.store = store or DATA_STORE
 
     def import_payload(self, payload: Dict[str, Optional[FileStorage]]) -> Dict[str, int]:
-        """Parse uploaded content and feed it into the store."""
+        """Analizza i file caricati e popola l'archivio."""
 
         summary: Dict[str, int] = {}
         for entity, required_columns in self.EXPECTED_COLUMNS.items():
@@ -45,12 +45,15 @@ class CSVImportCoordinator:
             if not file_storage:
                 continue
 
+            print(f"[Import] Elaborazione di {entity}...")
             records = self._read_csv(file_storage, required_columns)
             if not records:
+                print(f"[Import] Nessun record trovato per {entity}.")
                 continue
 
             self.store.replace_entity(entity, records)
             summary[entity] = len(records)
+            print(f"[Import] Caricati {len(records)} record per {entity}.")
         return summary
 
     def _read_csv(self, file_storage, required_columns: Iterable[str]) -> List[Dict[str, str]]:
@@ -62,11 +65,11 @@ class CSVImportCoordinator:
 
         reader = csv.DictReader(io.StringIO(text))
         if reader.fieldnames is None:
-            raise ValueError("CSV file is missing a header row")
+            raise ValueError("Il file CSV non contiene l'intestazione.")
 
         missing = [column for column in required_columns if column not in reader.fieldnames]
         if missing:
-            raise ValueError(f"Missing expected columns: {', '.join(missing)}")
+            raise ValueError(f"Colonne mancanti: {', '.join(missing)}")
 
         rows: List[Dict[str, str]] = []
         for row in reader:

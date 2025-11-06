@@ -1,4 +1,4 @@
-"""Alert summary store for the alternate application."""
+"""Archivio delle allerte per la nuova applicazione."""
 
 from __future__ import annotations
 
@@ -7,8 +7,19 @@ import io
 from typing import Dict, Iterable, List
 
 
+FIELDNAMES = [
+    "alert_type",
+    "account_id",
+    "account_name",
+    "contact_id",
+    "contact_name",
+    "details",
+    "message",
+]
+
+
 class AlertSummaryStore:
-    """Captures alert records produced by the alert loop."""
+    """Memorizza le allerte prodotte dal ciclo di controllo."""
 
     def __init__(self) -> None:
         self.reset()
@@ -19,7 +30,8 @@ class AlertSummaryStore:
     def record(self, alert: Dict[str, str]) -> None:
         if not alert:
             return
-        self._alerts.append(dict(alert))
+        normalised = {field: alert.get(field, "") for field in FIELDNAMES}
+        self._alerts.append(normalised)
 
     def extend(self, alerts: Iterable[Dict[str, str]]) -> None:
         for alert in alerts:
@@ -32,26 +44,11 @@ class AlertSummaryStore:
         return self.all_alerts()
 
     def to_csv(self) -> bytes:
-        if not self._alerts:
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerow(["alert_type", "account_id", "account_name", "contact_id", "contact_name", "details", "triggered_at"])
-            return output.getvalue().encode("utf-8")
-
-        fieldnames = [
-            "alert_type",
-            "account_id",
-            "account_name",
-            "contact_id",
-            "contact_name",
-            "details",
-            "triggered_at",
-        ]
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer = csv.DictWriter(output, fieldnames=FIELDNAMES)
         writer.writeheader()
         for alert in self._alerts:
-            writer.writerow({field: alert.get(field, "") for field in fieldnames})
+            writer.writerow({field: alert.get(field, "") for field in FIELDNAMES})
         return output.getvalue().encode("utf-8")
 
 
