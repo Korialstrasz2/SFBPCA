@@ -512,6 +512,44 @@ button.secondary:hover {
   gap: 1rem;
 }
 
+.alert-summary-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.summary-tab {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  background: #e2e8f0;
+  color: #1f4b99;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.summary-tab:hover,
+.summary-tab:focus-visible,
+.summary-tab.active {
+  background: #1f4b99;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.summary-tab:focus-visible {
+  outline: 3px solid rgba(31, 75, 153, 0.3);
+  outline-offset: 2px;
+}
+
+.summary-tab-panel {
+  display: none;
+}
+
+.summary-tab-panel.active {
+  display: block;
+}
+
 .alert-summary-controls {
   display: flex;
   justify-content: space-between;
@@ -585,6 +623,86 @@ button.secondary:hover {
 }
 
 .alert-summary-table tr.empty td {
+  text-align: center;
+  font-style: italic;
+  color: #52606d;
+}
+
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.summary-stats-section {
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.summary-stats-section h3 {
+  margin-top: 0;
+  color: #1f4b99;
+}
+
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.summary-metrics div {
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #d9e2ec;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.summary-metrics dt {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #52606d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-metrics dd {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2933;
+}
+
+.summary-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.summary-stats-table th,
+.summary-stats-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.summary-stats-table thead {
+  background: #1f4b99;
+  color: #fff;
+}
+
+.summary-stats-table tbody tr:nth-child(even) {
+  background: rgba(31, 75, 153, 0.06);
+}
+
+.summary-stats-table tr.empty td {
   text-align: center;
   font-style: italic;
   color: #52606d;
