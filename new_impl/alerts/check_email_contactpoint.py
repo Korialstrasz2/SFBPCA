@@ -1,0 +1,77 @@
+"""Allerta sulla coerenza delle email tra Contact e ContactPointEmail."""
+
+from __future__ import annotations
+
+from typing import List
+
+from ..alert_summary import AlertSummaryStore
+from ..data_store import AccountContext, DATA_STORE
+from .common import iter_contacts, normalise_text
+
+
+def _normalise_email(value: str | None) -> str:
+    return normalise_text(value)
+
+
+def reset_state() -> None:  # pragma: no cover - nessuno stato condiviso
+    return None
+
+
+def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
+    """Allinea l'indirizzo email del contatto con i ContactPointEmail."""
+
+    account_id = account_context.account_id
+    account_name = DATA_STORE.resolve_account_name(account_id)
+
+    for contact, roles in iter_contacts(account_context):
+        contact_id = contact["Id"]
+        contact_name = DATA_STORE.resolve_contact_name(contact_id)
+
+        email_on_contact = _normalise_email(contact.get("Email"))
+        contact_points = DATA_STORE.get_contact_points_for_contact(contact_id)["emails"]
+        emails_on_points: List[str] = [
+            _normalise_email(point.get("EmailAddress"))
+            for point in contact_points
+            if _normalise_email(point.get("EmailAddress"))
+        ]
+
+        if not email_on_contact and not emails_on_points:
+            continue
+
+        if email_on_contact and not emails_on_points:
+            details = "Email presente sul contatto ma non sui ContactPointEmail."
+        elif emails_on_points and not email_on_contact:
+            details = "ContactPointEmail valorizzati ma il campo Email del contatto è vuoto."
+        else:
+            if email_on_contact in emails_on_points:
+                continue
+            details = "Email presenti ma non coincidono tra Contact e ContactPointEmail."
+
+        message_lines = [
+            "Passo 1 ➜ Ho estratto l'email principale dal record Contact.",
+            "Passo 2 ➜ Ho confrontato le email memorizzate sui ContactPointEmail collegati.",
+            f"Passo 3 ➜ Email sul contatto: {email_on_contact or 'assenza'}.",
+        ]
+        if emails_on_points:
+            message_lines.append(
+                "Passo 4 ➜ Email su ContactPointEmail: " + ", ".join(emails_on_points)
+            )
+        else:
+            message_lines.append("Passo 4 ➜ Nessun ContactPointEmail valorizzato.")
+        message_lines.append("Suggerimento: sincronizza l'indirizzo email tra Contact e ContactPointEmail.")
+        message = "\n".join(message_lines)
+
+        summary.record(
+            {
+                "alert_type": "Email incoerente",
+                "account_id": account_id,
+                "account_name": account_name,
+                "contact_id": contact_id,
+                "contact_name": contact_name,
+                "details": details,
+                "message": message,
+                "contact_roles": ", ".join(roles) or "Non indicato",
+                "issue_category": "Coerenza",
+                "data_focus": "Email",
+            }
+        )

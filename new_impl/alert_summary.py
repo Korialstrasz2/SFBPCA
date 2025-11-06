@@ -13,6 +13,9 @@ FIELDNAMES = [
     "account_name",
     "contact_id",
     "contact_name",
+    "contact_roles",
+    "issue_category",
+    "data_focus",
     "details",
     "message",
 ]
