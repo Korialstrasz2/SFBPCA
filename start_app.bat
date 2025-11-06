@@ -21,7 +21,7 @@ set /p APP_CHOICE=Select option (1/2):
 
 if /I "!APP_CHOICE!"=="2" (
     echo Starting alternate Flask application...
-    python new_main.py
+    python -m new_impl.main
 ) else (
     echo Starting original Flask application...
     python app.py
