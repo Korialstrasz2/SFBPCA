@@ -350,6 +350,21 @@ button.secondary:hover {
   gap: 0.75rem;
 }
 
+.alert-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.25rem;
+  color: #1f2933;
+}
+
+.alert-steps li {
+  background: rgba(31, 75, 153, 0.08);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  list-style-position: inside;
+}
+
 .alert-list li .alert-type {
   font-weight: 700;
   color: #1f4b99;
