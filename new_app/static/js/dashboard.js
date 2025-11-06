@@ -54,17 +54,17 @@
       <header>
         <div>
           <label class="inline-label">
-            <span>Titolo sezione</span>
-            <input type="text" name="section_name" value="${escapeHtml(name)}" placeholder="Esempio: Clienti privati" required />
+            <span>Section title</span>
+            <input type="text" name="section_name" value="${escapeHtml(name)}" placeholder="Example: Private clients" required />
           </label>
         </div>
-        <button type="button" class="icon-button remove-section" aria-label="Rimuovi sezione">&times;</button>
+        <button type="button" class="icon-button remove-section" aria-label="Remove section">&times;</button>
       </header>
       <label>
-        <span>ID Account</span>
+        <span>Account IDs</span>
         <textarea name="section_account_ids" rows="4" placeholder="001XXXXXXXXXXXX\n001YYYYYYYYYYYY">${escapeHtml(accountIds)}</textarea>
       </label>
-      <p class="form-hint">Separa gli ID con virgole, spazi o nuove righe.</p>
+      <p class="form-hint">Separate IDs with commas, spaces, or new lines.</p>
     `;
 
     wrapper.querySelector('.remove-section').addEventListener('click', () => {
@@ -80,7 +80,7 @@
   function addInitialSection() {
     if (!sectionContainer) return;
     sectionContainer.innerHTML = '';
-    createSection({ name: 'Sezione predefinita' });
+    createSection({ name: 'Default section' });
   }
 
   function escapeHtml(value) {
@@ -102,7 +102,7 @@
         .map((token) => token.trim())
         .filter(Boolean);
       return {
-        name: nameInput.value.trim() || 'Sezione senza titolo',
+        name: nameInput.value.trim() || 'Untitled section',
         accountIds: Array.from(new Set(tokens)),
       };
     });
@@ -123,7 +123,7 @@
   function renderQueryResults(sectionResults) {
     if (!queryOutput) return;
     if (!sectionResults.length) {
-      queryOutput.innerHTML = '<p class="query-empty">Aggiungi almeno una sezione con ID Account per generare le query.</p>';
+      queryOutput.innerHTML = '<p class="query-empty">Add at least one section with Account IDs to generate queries.</p>';
       return;
     }
 
@@ -132,22 +132,22 @@
         const cards = queries
           .map(
             ({ key, title, query }) => `
-              <article class="query-snippet" data-entity="${escapeHtml(key)}">
+              <article class="query-snippet" data-entity="${key}">
                 <header>
                   <h3>${escapeHtml(title)} query</h3>
                   <span class="badge">${escapeHtml(`${title}.csv`)}</span>
                 </header>
                 <pre><code>${escapeHtml(query)}</code></pre>
-                <button type="button" class="copy-query" data-query="${escapeHtml(query)}">Copia negli appunti</button>
+                <button type="button" class="copy-query" data-query="${escapeHtml(query)}">Copy to clipboard</button>
               </article>
             `,
           )
           .join('');
         return `
-          <section class="query-card-group" aria-label="Query per ${escapeHtml(section.name)}">
+          <section class="query-card-group" aria-label="${escapeHtml(section.name)} queries">
             <header>
               <h3>${escapeHtml(section.name)}</h3>
-              <p class="form-hint">${section.accountIds.length} ID Account</p>
+              <p class="form-hint">${section.accountIds.length} Account IDs</p>
             </header>
             <div class="query-grid">${cards}</div>
           </section>
@@ -163,7 +163,7 @@
     if (!query) return;
     const previous = button.textContent;
     if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
-      button.textContent = 'Appunti non disponibili';
+      button.textContent = 'Clipboard unavailable';
       setTimeout(() => {
         button.textContent = previous;
       }, 2000);
@@ -171,9 +171,9 @@
     }
     try {
       await navigator.clipboard.writeText(query);
-      button.textContent = 'Copiato!';
+      button.textContent = 'Copied!';
     } catch (error) {
-      button.textContent = 'Copia non riuscita';
+      button.textContent = 'Copy failed';
     } finally {
       setTimeout(() => {
         button.textContent = previous;
@@ -195,24 +195,24 @@
     event.preventDefault();
     if (!importForm) return;
     const formData = new FormData(importForm);
-    setFeedback('Caricamento dei file in corso...', 'pending');
+    setFeedback('Uploading files...', 'pending');
     try {
       const response = await fetch('/api/import', { method: 'POST', body: formData });
       if (!response.ok) {
-        throw new Error(`Importazione non riuscita, codice ${response.status}`);
+        throw new Error(`Import failed with status ${response.status}`);
       }
       const payload = await response.json();
       const imported = Object.entries(payload.summary || {})
         .map(([entity, count]) => `${entity.replace(/_/g, ' ')}: ${count}`)
         .join(', ');
-      setFeedback(imported ? `Importati ${imported}.` : 'Nessun file elaborato.', 'success');
+      setFeedback(imported ? `Imported ${imported}.` : 'No files processed.', 'success');
     } catch (error) {
-      setFeedback(error.message || 'Importazione non riuscita.', 'error');
+      setFeedback(error.message || 'Import failed.', 'error');
     }
   }
 
   function handleImportReset() {
-    setFeedback('Selezioni azzerate.', 'info');
+    setFeedback('Selections cleared.', 'info');
   }
 
   function setFeedback(message, variant) {
@@ -224,12 +224,11 @@
   async function runAlerts() {
     if (!alertButton) return;
     alertButton.disabled = true;
-    const previousText = alertButton.textContent;
-    alertButton.textContent = 'Analisi in corso...';
+    alertButton.textContent = 'Running...';
     try {
       const response = await fetch('/api/alerts/run', { method: 'POST' });
       if (!response.ok) {
-        throw new Error(`Ciclo avvisi non riuscito, codice ${response.status}`);
+        throw new Error(`Alert loop failed with status ${response.status}`);
       }
       const payload = await response.json();
       renderAlerts(payload.details || []);
@@ -238,41 +237,38 @@
       renderAlerts([]);
       renderSummary([]);
       if (alertList) {
-        alertList.innerHTML = `<li class="alert-item error">${escapeHtml(error.message || 'Ciclo avvisi non riuscito.')}</li>`;
+        alertList.innerHTML = `<li class="alert-item error">${escapeHtml(error.message || 'Alert loop failed.')}</li>`;
       }
     } finally {
       alertButton.disabled = false;
-      alertButton.textContent = previousText;
+      alertButton.textContent = 'Run alert loop';
     }
   }
 
   function renderAlerts(alerts) {
     if (!alertList) return;
     if (!alerts.length) {
-      alertList.innerHTML = '<li class="alert-item">Nessun avviso generato.</li>';
+      alertList.innerHTML = '<li class="alert-item">No alerts generated.</li>';
     } else {
       const markup = alerts
-        .map((alert) => {
-          const detailsMarkup = alert.details
-            ? `<pre class="alert-details">${escapeHtml(alert.details)}</pre>`
-            : '';
-          return `
+        .map(
+          (alert) => `
             <li class="alert-item">
-              <h3>${escapeHtml(alert.alert_type || 'Avviso')}</h3>
+              <h3>${escapeHtml(alert.alert_type || 'Alert')}</h3>
               <p>${escapeHtml(alert.message || '')}</p>
               <dl class="alert-meta">
-                <div><dt>Account</dt><dd>${escapeHtml(alert.account_name || alert.account_id || 'Sconosciuto')}</dd></div>
-                <div><dt>Contatto</dt><dd>${escapeHtml(alert.contact_name || alert.contact_id || 'Non specificato')}</dd></div>
+                <div><dt>Account</dt><dd>${escapeHtml(alert.account_name || alert.account_id || 'Unknown')}</dd></div>
+                <div><dt>Contact</dt><dd>${escapeHtml(alert.contact_name || alert.contact_id || 'N/A')}</dd></div>
+                <div><dt>Triggered</dt><dd>${escapeHtml(alert.triggered_at || '')}</dd></div>
               </dl>
-              ${detailsMarkup}
             </li>
-          `;
-        })
+          `,
+        )
         .join('');
       alertList.innerHTML = markup;
     }
     if (alertCount) {
-      alertCount.textContent = alerts.length ? `${alerts.length} avvisi` : '';
+      alertCount.textContent = alerts.length ? `${alerts.length} alerts` : '';
     }
   }
 
@@ -290,9 +286,10 @@
         (row) => `
           <tr>
             <td>${escapeHtml(row.alert_type)}</td>
-            <td>${escapeHtml(row.account_name || row.account_id || 'Sconosciuto')}</td>
-            <td>${escapeHtml(row.contact_name || row.contact_id || 'Non specificato')}</td>
-            <td>${escapeHtml(row.details || '').replace(/\n/g, '<br />')}</td>
+            <td>${escapeHtml(row.account_name || row.account_id || 'Unknown')}</td>
+            <td>${escapeHtml(row.contact_name || row.contact_id || 'N/A')}</td>
+            <td>${escapeHtml(row.details || '')}</td>
+            <td>${escapeHtml(row.triggered_at)}</td>
           </tr>
         `,
       )
@@ -307,19 +304,19 @@
     try {
       const response = await fetch('/api/alerts/download');
       if (!response.ok) {
-        throw new Error('Impossibile scaricare il CSV');
+        throw new Error('Unable to download CSV');
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'riepilogo_avvisi.csv';
+      link.download = 'alert_summary.csv';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      window.alert(error.message || 'Download non riuscito.');
+      alert(error.message || 'Download failed.');
     }
   }
 
