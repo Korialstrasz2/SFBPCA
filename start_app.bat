@@ -17,7 +17,7 @@ git pull
 echo Choose the application to launch:
 echo   1 ^) Original Salesforce Relationship Inspector
 echo   2 ^) Alternate Relationship Companion ^(default after 2 seconds^)
-choice /c 12 /n /t 2 /d 2 /m "Select option (1/2): "
+choice /c 12 /n /t 1 /d 2 /m "Select option (1/2): "
 
 if errorlevel 2 (
     echo Starting alternate Flask application...
