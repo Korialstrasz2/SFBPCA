@@ -30,6 +30,10 @@
     le relazioni e prepara i dati per l'analisi delle allerte.
   </p>
   <form id="import-form" enctype="multipart/form-data">
+    <div class="bulk-import-actions">
+      <input type="file" id="bulk-file-input" accept=".csv" multiple hidden />
+      <button type="button" class="secondary" id="select-all-files">Seleziona tutti i file</button>
+    </div>
     <div class="form-grid">
       {% for entity in entities %}
       <label class="file-input">
@@ -44,6 +48,26 @@
     </div>
   </form>
   <div id="import-feedback" role="status" aria-live="polite" class="feedback"></div>
+  <div
+    id="bulk-mapping-modal"
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="bulk-modal-title"
+    hidden
+  >
+    <div class="modal-content" role="document">
+      <h3 id="bulk-modal-title">Abbinamento dei file CSV</h3>
+      <p id="bulk-modal-description">
+        I file selezionati sono stati confrontati con le intestazioni previste. Controlla il riepilogo
+        per verificare gli abbinamenti.
+      </p>
+      <ul id="bulk-mapping-list" class="modal-list" aria-describedby="bulk-modal-description"></ul>
+      <div class="modal-actions">
+        <button type="button" class="primary" id="bulk-modal-close" data-modal-focus>Chiudi</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="alerts-panel" class="panel" aria-labelledby="alerts-heading">

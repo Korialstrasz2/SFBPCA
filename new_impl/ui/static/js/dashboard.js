@@ -19,9 +19,19 @@
   const filterDataFocus = document.getElementById('filter-data-focus');
   const stepButtons = document.querySelectorAll('.step-button');
   const panels = document.querySelectorAll('.panel');
+  const bulkFileInput = document.getElementById('bulk-file-input');
+  const bulkSelectButton = document.getElementById('select-all-files');
+  const bulkModal = document.getElementById('bulk-mapping-modal');
+  const bulkModalList = document.getElementById('bulk-mapping-list');
+  const bulkModalClose = document.getElementById('bulk-modal-close');
 
   let sectionIdCounter = 0;
   let currentSummaryRows = [];
+  let lastFocusedElement = null;
+
+  if (bulkModal) {
+    bulkModal.setAttribute('aria-hidden', 'true');
+  }
 
   const SOQL_BUILDERS = {
     accounts: (ids) =>
@@ -45,6 +55,43 @@
     account_contact_relations: 'AccountContactRelation',
     contact_point_phones: 'ContactPointPhone',
     contact_point_emails: 'ContactPointEmail',
+  };
+
+  const SUPPORTED_ENTITIES = [
+    'accounts',
+    'contacts',
+    'individuals',
+    'account_contact_relations',
+    'contact_point_phones',
+    'contact_point_emails',
+  ];
+
+  const ENTITY_LABELS = {
+    accounts: 'Account',
+    contacts: 'Contatti',
+    individuals: 'Individual',
+    account_contact_relations: 'Relazioni Account-Contact',
+    contact_point_phones: 'Contact Point Phone',
+    contact_point_emails: 'Contact Point Email',
+  };
+
+  const EXPECTED_COLUMNS = {
+    accounts: ['Id', 'Name'],
+    contacts: [
+      'Id',
+      'FirstName',
+      'LastName',
+      'IndividualId',
+      'FiscalCode__c',
+      'VATNumber__c',
+      'MobilePhone',
+      'HomePhone',
+      'Email',
+    ],
+    individuals: ['Id', 'FirstName', 'LastName'],
+    account_contact_relations: ['Id', 'AccountId', 'ContactId', 'Roles'],
+    contact_point_phones: ['Id', 'ParentId', 'TelephoneNumber'],
+    contact_point_emails: ['Id', 'ParentId', 'EmailAddress', 'Type__c'],
   };
 
   function formatIds(ids) {
@@ -96,6 +143,137 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function normaliseHeaderValue(value) {
+    return (value || '')
+      .replace(/^\ufeff/, '')
+      .replace(/^"|"$/g, '')
+      .trim();
+  }
+
+  function extractCsvHeaderColumns(text) {
+    if (!text) {
+      throw new Error('File vuoto.');
+    }
+    const match = text.match(/^(.*?)(?:\r?\n|$)/);
+    const headerLine = match ? match[1] : '';
+    if (!headerLine) {
+      throw new Error('Intestazione non trovata nel file CSV.');
+    }
+    return headerLine
+      .split(',')
+      .map(normaliseHeaderValue)
+      .filter(Boolean);
+  }
+
+  async function readCsvColumns(file) {
+    const source = typeof file.slice === 'function' ? file.slice(0, 4096) : file;
+    const text = typeof source.text === 'function' ? await source.text() : await file.text();
+    return extractCsvHeaderColumns(text);
+  }
+
+  function getMatchingEntities(columns) {
+    return SUPPORTED_ENTITIES.filter((entity) => {
+      const expected = EXPECTED_COLUMNS[entity] || [];
+      return expected.every((column) => columns.includes(column));
+    });
+  }
+
+  async function classifyFiles(files) {
+    const matched = [];
+    const unmatched = [];
+    const usedEntities = new Set();
+
+    for (const file of files) {
+      try {
+        const columns = await readCsvColumns(file);
+        const matches = getMatchingEntities(columns);
+        if (!matches.length) {
+          unmatched.push({ file, reason: 'Intestazioni non riconosciute.' });
+          continue;
+        }
+        const available = matches.find((entity) => !usedEntities.has(entity));
+        if (available) {
+          usedEntities.add(available);
+          matched.push({ entity: available, file });
+        } else {
+          const label = ENTITY_LABELS[matches[0]] || matches[0];
+          unmatched.push({ file, reason: `File duplicato per ${label}.` });
+        }
+      } catch (error) {
+        unmatched.push({ file, reason: error.message || 'File non leggibile.' });
+      }
+    }
+
+    return { matched, unmatched };
+  }
+
+  function assignFileToInput(entity, file) {
+    if (!importForm) return;
+    const input = importForm.querySelector(`input[name="${entity}"]`);
+    if (!input) return;
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function applyBulkAssignments(result) {
+    result.matched.forEach(({ entity, file }) => {
+      assignFileToInput(entity, file);
+    });
+  }
+
+  function buildModalListMarkup(result) {
+    const items = [];
+
+    result.matched.forEach(({ entity, file }) => {
+      const label = ENTITY_LABELS[entity] || entity;
+      const fileName = file && file.name ? file.name : 'File sconosciuto';
+      items.push(
+        `<li class="matched"><strong>${escapeHtml(fileName)}</strong><span>Assegnato a ${escapeHtml(label)}</span></li>`
+      );
+    });
+
+    result.unmatched.forEach(({ file, reason }) => {
+      const detail = reason || 'File non riconosciuto.';
+      const fileName = file && file.name ? file.name : 'File sconosciuto';
+      items.push(
+        `<li class="unmatched"><strong>${escapeHtml(fileName)}</strong><span>${escapeHtml(detail)}</span></li>`
+      );
+    });
+
+    if (!items.length) {
+      items.push('<li class="matched"><strong>Nessun file elaborato.</strong></li>');
+    }
+
+    return items.join('');
+  }
+
+  function showBulkModal(result) {
+    if (!bulkModal || !bulkModalList) return;
+    bulkModalList.innerHTML = buildModalListMarkup(result);
+    bulkModal.removeAttribute('hidden');
+    bulkModal.setAttribute('aria-hidden', 'false');
+    lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTarget = bulkModal.querySelector('[data-modal-focus]');
+    if (focusTarget && typeof focusTarget.focus === 'function') {
+      focusTarget.focus();
+    }
+  }
+
+  function hideBulkModal() {
+    if (!bulkModal) return;
+    bulkModal.setAttribute('hidden', '');
+    bulkModal.setAttribute('aria-hidden', 'true');
+    if (bulkModalList) {
+      bulkModalList.innerHTML = '';
+    }
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+    lastFocusedElement = null;
   }
 
   function parseSections() {
@@ -221,10 +399,50 @@
     setFeedback('Selezioni azzerate.', 'info');
   }
 
+  async function handleBulkFileSelection(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) {
+      return;
+    }
+
+    let result;
+    try {
+      result = await classifyFiles(files);
+      applyBulkAssignments(result);
+      const matchedCount = result.matched.length;
+      const unmatchedCount = result.unmatched.length;
+      if (matchedCount && !unmatchedCount) {
+        setFeedback(`Abbinati automaticamente ${matchedCount} file CSV.`, 'success');
+      } else if (matchedCount && unmatchedCount) {
+        setFeedback(
+          `Abbinati ${matchedCount} file, ${unmatchedCount} non riconosciuti. Controlla il riepilogo.`,
+          'warning'
+        );
+      } else {
+        setFeedback('Nessun file riconosciuto. Controlla le intestazioni dei CSV.', 'error');
+      }
+    } catch (error) {
+      setFeedback(error.message || 'Impossibile analizzare i file selezionati.', 'error');
+      result = {
+        matched: [],
+        unmatched: files.map((file) => ({ file, reason: 'Analisi non riuscita.' })),
+      };
+    } finally {
+      if (result) {
+        showBulkModal(result);
+      }
+      event.target.value = '';
+    }
+  }
+
   function setFeedback(message, variant) {
     if (!importFeedback) return;
     importFeedback.textContent = message;
-    importFeedback.dataset.variant = variant;
+    if (variant) {
+      importFeedback.dataset.variant = variant;
+    } else {
+      delete importFeedback.dataset.variant;
+    }
   }
 
   async function runAlerts() {
@@ -487,6 +705,34 @@
   if (importForm) {
     importForm.addEventListener('submit', handleImport);
     importForm.addEventListener('reset', handleImportReset);
+  }
+
+  if (bulkSelectButton && bulkFileInput) {
+    bulkSelectButton.addEventListener('click', () => {
+      bulkFileInput.click();
+    });
+  }
+
+  if (bulkFileInput) {
+    bulkFileInput.addEventListener('change', handleBulkFileSelection);
+  }
+
+  if (bulkModalClose) {
+    bulkModalClose.addEventListener('click', hideBulkModal);
+  }
+
+  if (bulkModal) {
+    bulkModal.addEventListener('click', (event) => {
+      if (event.target === bulkModal) {
+        hideBulkModal();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !bulkModal.hasAttribute('hidden')) {
+        hideBulkModal();
+      }
+    });
   }
 
   if (alertButton) {
