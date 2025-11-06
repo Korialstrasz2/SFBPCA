@@ -63,6 +63,7 @@ class AlertLoopRunner:
         return {
             "details": details,
             "summary": self.summary.summary_rows(),
+            "statistics": self.summary.statistics(total_accounts=len(targets)),
         }
 
     def _iter_targets(self, account_ids: Optional[Sequence[str]]) -> Iterable[str]:

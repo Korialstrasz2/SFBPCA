@@ -63,12 +63,12 @@ def create_app() -> Flask:
 
     @app.get("/api/alerts/download")
     def download_alerts() -> Response:
-        csv_bytes = ALERT_SUMMARY.to_csv()
+        excel_bytes = ALERT_SUMMARY.to_excel()
         return send_file(
-            io.BytesIO(csv_bytes),
-            mimetype="text/csv",
+            io.BytesIO(excel_bytes),
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
-            download_name="riepilogo_allerte.csv",
+            download_name="riepilogo_allerte.xlsx",
         )
 
     return app

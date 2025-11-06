@@ -88,60 +88,149 @@
 <section id="summary-panel" class="panel" aria-labelledby="summary-heading">
   <h2 id="summary-heading">Passo 3 &mdash; Scarica il riepilogo delle allerte</h2>
   <p>
-    Quando sono disponibili allerte puoi scaricare un CSV con il tipo, l'account, i contatti coinvolti
-    e i dettagli descrittivi. Il riepilogo viene rigenerato ad ogni esecuzione.
+    Quando sono disponibili allerte puoi scaricare un file Excel con i dettagli e una pagina dedicata
+    alle statistiche riepilogative. I contenuti vengono rigenerati ad ogni esecuzione.
   </p>
   <div class="alert-summary" id="alert-summary">
-    <div class="alert-summary-controls">
-      <div class="summary-filters" role="group" aria-label="Filtri riepilogo allerte">
-        <label class="summary-filter">
-          <span>Account</span>
-          <select id="filter-account">
-            <option value="">Tutti</option>
-          </select>
-        </label>
-        <label class="summary-filter">
-          <span>Tipo di allerta</span>
-          <select id="filter-alert-type">
-            <option value="">Tutti</option>
-          </select>
-        </label>
-        <label class="summary-filter">
-          <span>Ruolo contatto</span>
-          <select id="filter-contact-role">
-            <option value="">Tutti</option>
-          </select>
-        </label>
-        <label class="summary-filter">
-          <span>Categoria</span>
-          <select id="filter-category">
-            <option value="">Tutte</option>
-          </select>
-        </label>
-        <label class="summary-filter">
-          <span>Focus dati</span>
-          <select id="filter-data-focus">
-            <option value="">Tutti</option>
-          </select>
-        </label>
-      </div>
-      <button id="download-alerts" class="secondary" type="button" disabled>Scarica CSV</button>
+    <div class="alert-summary-tabs" role="tablist" aria-label="Sezioni del riepilogo allerte">
+      <button
+        id="summary-tab-details"
+        type="button"
+        class="summary-tab active"
+        data-target="summary-details"
+        role="tab"
+        aria-selected="true"
+        aria-controls="summary-details"
+      >
+        Dettaglio allerte
+      </button>
+      <button
+        id="summary-tab-stats"
+        type="button"
+        class="summary-tab"
+        data-target="summary-stats"
+        role="tab"
+        aria-selected="false"
+        aria-controls="summary-stats"
+      >
+        Statistiche riepilogo
+      </button>
     </div>
-    <table id="alert-summary-table" class="alert-summary-table" hidden>
-      <thead>
-        <tr>
-          <th scope="col">Tipo di allerta</th>
-          <th scope="col">Account</th>
-          <th scope="col">Contatti</th>
-          <th scope="col">Ruoli</th>
-          <th scope="col">Categoria</th>
-          <th scope="col">Focus dati</th>
-          <th scope="col">Dettagli</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <p id="alert-summary-empty" class="alert-summary-empty">Esegui il ciclo allerte per popolare il riepilogo.</p>
+    <div
+      id="summary-details"
+      class="summary-tab-panel active"
+      role="tabpanel"
+      aria-labelledby="summary-tab-details"
+    >
+      <div class="alert-summary-controls">
+        <div class="summary-filters" role="group" aria-label="Filtri riepilogo allerte">
+          <label class="summary-filter">
+            <span>Account</span>
+            <select id="filter-account">
+              <option value="">Tutti</option>
+            </select>
+          </label>
+          <label class="summary-filter">
+            <span>Tipo di allerta</span>
+            <select id="filter-alert-type">
+              <option value="">Tutti</option>
+            </select>
+          </label>
+          <label class="summary-filter">
+            <span>Ruolo contatto</span>
+            <select id="filter-contact-role">
+              <option value="">Tutti</option>
+            </select>
+          </label>
+        </div>
+        <button id="download-alerts" class="secondary" type="button" disabled>Scarica Excel</button>
+      </div>
+      <table id="alert-summary-table" class="alert-summary-table" hidden>
+        <thead>
+          <tr>
+            <th scope="col">Tipo di allerta</th>
+            <th scope="col">Account</th>
+            <th scope="col">Contatti</th>
+            <th scope="col">Ruoli</th>
+            <th scope="col">Focus dati</th>
+            <th scope="col">Dettagli</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="alert-summary-empty" class="alert-summary-empty">Esegui il ciclo allerte per popolare il riepilogo.</p>
+    </div>
+    <div
+      id="summary-stats"
+      class="summary-tab-panel"
+      role="tabpanel"
+      aria-labelledby="summary-tab-stats"
+      hidden
+    >
+      <div id="summary-stats-content" class="summary-stats" hidden>
+        <section class="summary-stats-section">
+          <h3>Indicatori principali</h3>
+          <dl class="summary-metrics">
+            <div>
+              <dt>Allerte totali</dt>
+              <dd id="stat-total-alerts">0</dd>
+            </div>
+            <div>
+              <dt>Account caricati</dt>
+              <dd id="stat-total-accounts">0</dd>
+            </div>
+            <div>
+              <dt>Account con allerte</dt>
+              <dd id="stat-accounts-with-alerts">0</dd>
+            </div>
+            <div>
+              <dt>Contatti con allerte</dt>
+              <dd id="stat-unique-contacts">0</dd>
+            </div>
+            <div>
+              <dt>Tipi di allerta</dt>
+              <dd id="stat-unique-alert-types">0</dd>
+            </div>
+            <div>
+              <dt>Allerte senza contatto</dt>
+              <dd id="stat-alerts-without-contact">0</dd>
+            </div>
+            <div>
+              <dt>Media allerte per account</dt>
+              <dd id="stat-average-alerts">0</dd>
+            </div>
+          </dl>
+        </section>
+        <section class="summary-stats-section">
+          <h3>Statistiche per tipo di allerta</h3>
+          <table class="summary-stats-table">
+            <thead>
+              <tr>
+                <th scope="col">Tipo di allerta</th>
+                <th scope="col">Allerte</th>
+                <th scope="col">Account coinvolti</th>
+                <th scope="col">Contatti coinvolti</th>
+                <th scope="col">Allerte senza contatto</th>
+              </tr>
+            </thead>
+            <tbody id="summary-stats-per-type"></tbody>
+          </table>
+        </section>
+        <section class="summary-stats-section">
+          <h3>Account con più allerte</h3>
+          <table class="summary-stats-table">
+            <thead>
+              <tr>
+                <th scope="col">Account</th>
+                <th scope="col">Allerte</th>
+              </tr>
+            </thead>
+            <tbody id="summary-stats-top-accounts"></tbody>
+          </table>
+        </section>
+      </div>
+      <p id="summary-stats-empty" class="alert-summary-empty">Esegui il ciclo allerte per visualizzare le statistiche riepilogative.</p>
+    </div>
   </div>
 </section>
 {% endblock %}

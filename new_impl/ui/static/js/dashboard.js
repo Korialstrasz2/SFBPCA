@@ -15,8 +15,22 @@
   const filterAccount = document.getElementById('filter-account');
   const filterAlertType = document.getElementById('filter-alert-type');
   const filterContactRole = document.getElementById('filter-contact-role');
-  const filterCategory = document.getElementById('filter-category');
-  const filterDataFocus = document.getElementById('filter-data-focus');
+  const summaryTabsContainer = document.querySelector('.alert-summary-tabs');
+  const summaryTabs = document.querySelectorAll('.summary-tab');
+  const summaryTabPanels = document.querySelectorAll('.summary-tab-panel');
+  const summaryStatsContent = document.getElementById('summary-stats-content');
+  const summaryStatsEmpty = document.getElementById('summary-stats-empty');
+  const summaryStatsPerTypeBody = document.getElementById('summary-stats-per-type');
+  const summaryStatsTopAccountsBody = document.getElementById('summary-stats-top-accounts');
+  const statElements = {
+    totalAlerts: document.getElementById('stat-total-alerts'),
+    totalAccounts: document.getElementById('stat-total-accounts'),
+    accountsWithAlerts: document.getElementById('stat-accounts-with-alerts'),
+    uniqueContacts: document.getElementById('stat-unique-contacts'),
+    uniqueAlertTypes: document.getElementById('stat-unique-alert-types'),
+    alertsWithoutContact: document.getElementById('stat-alerts-without-contact'),
+    averageAlerts: document.getElementById('stat-average-alerts'),
+  };
   const stepButtons = document.querySelectorAll('.step-button');
   const panels = document.querySelectorAll('.panel');
   const bulkFileInput = document.getElementById('bulk-file-input');
@@ -28,6 +42,12 @@
   let sectionIdCounter = 0;
   let currentSummaryRows = [];
   let lastFocusedElement = null;
+
+  const integerFormatter = new Intl.NumberFormat('it-IT');
+  const averageFormatter = new Intl.NumberFormat('it-IT', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   if (bulkModal) {
     bulkModal.setAttribute('aria-hidden', 'true');
@@ -456,10 +476,10 @@
       }
       const payload = await response.json();
       renderAlerts(payload.details || []);
-      renderSummary(payload.summary || []);
+      renderSummary(payload.summary || [], payload.statistics || null);
     } catch (error) {
       renderAlerts([]);
-      renderSummary([]);
+      renderSummary([], null);
       if (alertList) {
         alertList.innerHTML = `<li class="alert-item error">${escapeHtml(error.message || 'Errore durante le allerte.')}</li>`;
       }
@@ -536,8 +556,6 @@
   function populateSummaryFilters(rows) {
     const accountValues = new Set();
     const alertTypes = new Set();
-    const categories = new Set();
-    const dataFocusValues = new Set();
     const roleValues = new Set();
 
     rows.forEach((row) => {
@@ -545,33 +563,25 @@
       if (account) accountValues.add(account);
       const alertType = normaliseFilterValue(row.alert_type);
       if (alertType) alertTypes.add(alertType);
-      const category = normaliseFilterValue(row.issue_category);
-      if (category) categories.add(category);
-      const dataFocus = normaliseFilterValue(row.data_focus);
-      if (dataFocus) dataFocusValues.add(dataFocus);
       getRoleList(row).forEach((role) => roleValues.add(role));
     });
 
     populateFilter(filterAccount, toSortedArray(accountValues), 'Tutti');
     populateFilter(filterAlertType, toSortedArray(alertTypes), 'Tutti');
     populateFilter(filterContactRole, toSortedArray(roleValues), 'Tutti');
-    populateFilter(filterCategory, toSortedArray(categories), 'Tutte');
-    populateFilter(filterDataFocus, toSortedArray(dataFocusValues), 'Tutti');
   }
 
   function resetSummaryFilters() {
     populateFilter(filterAccount, [], 'Tutti');
     populateFilter(filterAlertType, [], 'Tutti');
     populateFilter(filterContactRole, [], 'Tutti');
-    populateFilter(filterCategory, [], 'Tutte');
-    populateFilter(filterDataFocus, [], 'Tutti');
   }
 
   function renderSummaryTable(rows) {
     if (!summaryTable || !summaryTableBody || !summaryEmpty) return;
     if (!rows.length) {
       summaryTableBody.innerHTML =
-        '<tr class="empty"><td colspan="7">Nessuna riga corrispondente ai filtri selezionati.</td></tr>';
+        '<tr class="empty"><td colspan="6">Nessuna riga corrispondente ai filtri selezionati.</td></tr>';
     } else {
       const markup = rows
         .map(
@@ -581,7 +591,6 @@
               <td>${escapeHtml(getAccountLabel(row))}</td>
               <td>${escapeHtml(row.contact_name || row.contact_id || 'N/D')}</td>
               <td>${escapeHtml(row.contact_roles || 'N/D')}</td>
-              <td>${escapeHtml(row.issue_category || 'N/D')}</td>
               <td>${escapeHtml(row.data_focus || 'N/D')}</td>
               <td>${escapeHtml(row.details || '')}</td>
             </tr>
@@ -607,8 +616,6 @@
       account: filterAccount ? filterAccount.value : '',
       alertType: filterAlertType ? filterAlertType.value : '',
       contactRole: filterContactRole ? filterContactRole.value : '',
-      category: filterCategory ? filterCategory.value : '',
-      dataFocus: filterDataFocus ? filterDataFocus.value : '',
     };
 
     const filtered = currentSummaryRows.filter((row) => {
@@ -624,46 +631,151 @@
           return false;
         }
       }
-      if (filters.category && normaliseFilterValue(row.issue_category) !== filters.category) {
-        return false;
-      }
-      if (filters.dataFocus && normaliseFilterValue(row.data_focus) !== filters.dataFocus) {
-        return false;
-      }
       return true;
     });
 
     renderSummaryTable(filtered);
   }
 
-  function renderSummary(rows) {
-    if (!downloadButton || !summaryTable || !summaryTableBody || !summaryEmpty) return;
+  function formatInteger(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '0';
+    }
+    return integerFormatter.format(Math.trunc(value));
+  }
+
+  function formatAverage(value) {
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      return '0,00';
+    }
+    return averageFormatter.format(value);
+  }
+
+  function renderSummaryStatistics(statistics) {
+    if (!summaryStatsContent || !summaryStatsEmpty) return;
+
+    if (!statistics || !statistics.totals) {
+      summaryStatsContent.hidden = true;
+      summaryStatsEmpty.hidden = false;
+      Object.values(statElements).forEach((element) => {
+        if (element) element.textContent = '0';
+      });
+      if (summaryStatsPerTypeBody) {
+        summaryStatsPerTypeBody.innerHTML =
+          '<tr class="empty"><td colspan="5">Nessun dato disponibile.</td></tr>';
+      }
+      if (summaryStatsTopAccountsBody) {
+        summaryStatsTopAccountsBody.innerHTML =
+          '<tr class="empty"><td colspan="2">Nessun dato disponibile.</td></tr>';
+      }
+      return;
+    }
+
+    summaryStatsEmpty.hidden = true;
+    summaryStatsContent.hidden = false;
+
+    const totals = statistics.totals || {};
+    if (statElements.totalAlerts)
+      statElements.totalAlerts.textContent = formatInteger(totals.total_alerts || 0);
+    if (statElements.totalAccounts)
+      statElements.totalAccounts.textContent = formatInteger(totals.total_accounts || 0);
+    if (statElements.accountsWithAlerts)
+      statElements.accountsWithAlerts.textContent = formatInteger(totals.accounts_with_alerts || 0);
+    if (statElements.uniqueContacts)
+      statElements.uniqueContacts.textContent = formatInteger(totals.unique_contacts || 0);
+    if (statElements.uniqueAlertTypes)
+      statElements.uniqueAlertTypes.textContent = formatInteger(totals.unique_alert_types || 0);
+    if (statElements.alertsWithoutContact)
+      statElements.alertsWithoutContact.textContent = formatInteger(totals.alerts_without_contact || 0);
+    if (statElements.averageAlerts)
+      statElements.averageAlerts.textContent = formatAverage(totals.average_alerts_per_account || 0);
+
+    const perType = Array.isArray(statistics.per_type) ? statistics.per_type : [];
+    if (summaryStatsPerTypeBody) {
+      if (!perType.length) {
+        summaryStatsPerTypeBody.innerHTML =
+          '<tr class="empty"><td colspan="5">Nessun dato disponibile.</td></tr>';
+      } else {
+        const perTypeMarkup = perType
+          .map(
+            (row) => `
+              <tr>
+                <td>${escapeHtml(row.alert_type || 'N/D')}</td>
+                <td>${formatInteger(row.alert_count || 0)}</td>
+                <td>${formatInteger(row.unique_accounts || 0)}</td>
+                <td>${formatInteger(row.unique_contacts || 0)}</td>
+                <td>${formatInteger(row.alerts_without_contact || 0)}</td>
+              </tr>
+            `,
+          )
+          .join('');
+        summaryStatsPerTypeBody.innerHTML = perTypeMarkup;
+      }
+    }
+
+    const topAccounts = Array.isArray(statistics.top_accounts) ? statistics.top_accounts : [];
+    if (summaryStatsTopAccountsBody) {
+      if (!topAccounts.length) {
+        summaryStatsTopAccountsBody.innerHTML =
+          '<tr class="empty"><td colspan="2">Nessun dato disponibile.</td></tr>';
+      } else {
+        const topMarkup = topAccounts
+          .map((account) => {
+            const label = account.account_name || account.account_id || 'Sconosciuto';
+            return `
+              <tr>
+                <td>${escapeHtml(label)}</td>
+                <td>${formatInteger(account.alert_count || 0)}</td>
+              </tr>
+            `;
+          })
+          .join('');
+        summaryStatsTopAccountsBody.innerHTML = topMarkup;
+      }
+    }
+  }
+
+  function renderSummary(rows, statistics) {
+    if (
+      !downloadButton ||
+      !summaryTable ||
+      !summaryTableBody ||
+      !summaryEmpty ||
+      !summaryStatsEmpty ||
+      !summaryStatsContent
+    ) {
+      return;
+    }
+
     currentSummaryRows = Array.isArray(rows) ? rows : [];
+    const statsPayload = statistics && typeof statistics === 'object' ? statistics : null;
+
     if (!currentSummaryRows.length) {
       summaryTable.hidden = true;
       summaryEmpty.hidden = false;
       downloadButton.disabled = true;
       summaryTableBody.innerHTML = '';
       resetSummaryFilters();
-      return;
+    } else {
+      downloadButton.disabled = false;
+      populateSummaryFilters(currentSummaryRows);
+      applySummaryFilters();
     }
 
-    downloadButton.disabled = false;
-    populateSummaryFilters(currentSummaryRows);
-    applySummaryFilters();
+    renderSummaryStatistics(statsPayload);
   }
 
   async function downloadAlerts() {
     try {
       const response = await fetch('/api/alerts/download');
       if (!response.ok) {
-        throw new Error('Impossibile scaricare il CSV.');
+        throw new Error('Impossibile scaricare il file Excel.');
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'riepilogo_allerte.csv';
+      link.download = 'riepilogo_allerte.xlsx';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -671,6 +783,25 @@
     } catch (error) {
       alert(error.message || 'Download non riuscito.');
     }
+  }
+
+  function handleSummaryTabClick(event) {
+    const tab = event.target.closest('.summary-tab');
+    if (!tab) return;
+    const targetId = tab.dataset.target;
+    if (!targetId) return;
+
+    summaryTabs.forEach((button) => {
+      const isActive = button === tab;
+      button.classList.toggle('active', isActive);
+      button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+
+    summaryTabPanels.forEach((panel) => {
+      const isActive = panel.id === targetId;
+      panel.classList.toggle('active', isActive);
+      panel.hidden = !isActive;
+    });
   }
 
   function handleStepClick(event) {
@@ -743,7 +874,11 @@
     downloadButton.addEventListener('click', downloadAlerts);
   }
 
-  [filterAccount, filterAlertType, filterContactRole, filterCategory, filterDataFocus].forEach((element) => {
+  if (summaryTabsContainer) {
+    summaryTabsContainer.addEventListener('click', handleSummaryTabClick);
+  }
+
+  [filterAccount, filterAlertType, filterContactRole].forEach((element) => {
     if (element) {
       element.addEventListener('change', applySummaryFilters);
     }
