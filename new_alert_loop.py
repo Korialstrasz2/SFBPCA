@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Dict, Iterable, List, Optional, Sequence
 
-from .alert_summary import ALERT_SUMMARY, AlertSummaryStore
-from .alerts import ALERT_MODULES
-from .data_store import DATA_STORE, SalesforceRelationshipStore
+import alert_contact_doppio
+import alert_ruolo_doppio
+from new_alert_summary import ALERT_SUMMARY, AlertSummaryStore
+from new_data_structure_and_store import DATA_STORE, SalesforceRelationshipStore
 
 
 class AlertLoopRunner:
@@ -24,18 +25,15 @@ class AlertLoopRunner:
         """Execute the alert loop and return the captured alerts."""
 
         self.summary.reset()
-        for module in ALERT_MODULES:
-            module.reset_state()
+        alert_contact_doppio.reset_state()
+        alert_ruolo_doppio.reset_state()
 
-        account_counter = 0
-        for account_counter, account_id in enumerate(self._iter_targets(account_ids), start=1):
-            if account_counter <= 3 or account_counter % 10 == 0:
-                print(f"[new_impl] Analisi dell'account {account_id}")
+        for account_id in self._iter_targets(account_ids):
             context = self.store.describe_account(account_id)
-            for module in ALERT_MODULES:
-                module.run(context)
+            for contact in context.contacts:
+                alert_contact_doppio.inspect_contact(context, contact)
+                alert_ruolo_doppio.inspect_contact(context, contact)
 
-        print(f"[new_impl] Ciclo avvisi completato su {account_counter} account")
         return {
             "details": self.summary.all_alerts(),
             "summary": self.summary.summary_rows(),
