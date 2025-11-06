@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="query-section" aria-labelledby="query-heading">
+  <h2 id="query-heading">Costruisci le query di esportazione per sezioni di account personalizzate</h2>
+  <p>
+    Crea una o più sezioni di account, incolla gli ID Account e genera le query SOQL necessarie per
+    Accounts, Contacts, Individuals, AccountContactRelations, ContactPointPhone e ContactPointEmail.
+  </p>
+  <form id="query-config-form" class="query-form" novalidate>
+    <div id="account-sections" class="query-sections" aria-live="polite"></div>
+    <div class="form-actions">
+      <button type="button" class="secondary" id="add-account-section">Aggiungi sezione</button>
+      <button type="submit" class="primary">Genera query</button>
+    </div>
+  </form>
+  <div id="query-output" class="query-results" aria-live="polite"></div>
+</section>
+
+<section class="steps" aria-label="Navigazione del flusso di lavoro">
+  <button class="step-button active" data-target="import-panel">1. Importa i CSV</button>
+  <button class="step-button" data-target="alerts-panel">2. Avvia il controllo avvisi</button>
+  <button class="step-button" data-target="summary-panel">3. Scarica il riepilogo</button>
+</section>
+
+<section id="import-panel" class="panel active" aria-labelledby="import-heading">
+  <h2 id="import-heading">Passo 1 &mdash; Importa gli estratti Salesforce</h2>
+  <p>
+    Carica i CSV esportati per ciascun oggetto Salesforce. L'importazione azzera l'archivio in memoria,
+    ricostruisce le relazioni e prepara i dati per la valutazione degli avvisi.
+  </p>
+  <form id="import-form" enctype="multipart/form-data">
+    <div class="form-grid">
+      {% for key, label in entities.items() %}
+      <label class="file-input">
+        <span class="label-text">{{ label }}</span>
+        <input type="file" name="{{ key }}" accept=".csv" />
+      </label>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="primary">Carica e ricostruisci</button>
+      <button type="reset" class="secondary">Svuota selezioni</button>
+    </div>
+  </form>
+  <div id="import-feedback" role="status" aria-live="polite" class="feedback"></div>
+</section>
+
+<section id="alerts-panel" class="panel" aria-labelledby="alerts-heading">
+  <h2 id="alerts-heading">Passo 2 &mdash; Valuta gli avvisi</h2>
+  <p>
+    Il ciclo degli avvisi esamina ogni Account, controlla i contatti collegati e richiama tutti gli script di avviso
+    disponibili. Dopo ogni importazione esegui nuovamente l'analisi per aggiornare i risultati.
+  </p>
+  <div class="alert-controls">
+    <button id="run-alerts" class="primary" type="button">Esegui il ciclo avvisi</button>
+    <span id="alert-count" class="badge" aria-live="polite"></span>
+  </div>
+  <div class="alert-tab-panel" role="region" aria-live="polite">
+    <ul id="alert-list" class="alert-list"></ul>
+  </div>
+</section>
+
+<section id="summary-panel" class="panel" aria-labelledby="summary-heading">
+  <h2 id="summary-heading">Passo 3 &mdash; Scarica il riepilogo avvisi</h2>
+  <p>
+    Quando sono presenti avvisi puoi scaricare un CSV con il tipo di avviso, l'account e i dettagli di supporto.
+    Il riepilogo viene rigenerato ad ogni esecuzione del ciclo.
+  </p>
+  <div class="alert-summary" id="alert-summary">
+    <div class="alert-summary-controls">
+      <button id="download-alerts" class="secondary" type="button" disabled>Scarica CSV</button>
+    </div>
+    <table id="alert-summary-table" class="alert-summary-table" hidden>
+      <thead>
+        <tr>
+          <th scope="col">Tipo di avviso</th>
+          <th scope="col">Account</th>
+          <th scope="col">Contatto</th>
+          <th scope="col">Dettagli</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p id="alert-summary-empty" class="alert-summary-empty">Esegui il ciclo avvisi per popolare il riepilogo.</p>
+  </div>
+</section>
+{% endblock %}
