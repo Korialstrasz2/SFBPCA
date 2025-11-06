@@ -8,7 +8,7 @@ from typing import Dict, Iterable, List, Optional
 
 from werkzeug.datastructures import FileStorage
 
-from new_data_structure_and_store import DATA_STORE, SalesforceRelationshipStore
+from .data_store import DATA_STORE, SalesforceRelationshipStore
 
 
 class CSVImportCoordinator:
@@ -45,12 +45,15 @@ class CSVImportCoordinator:
             if not file_storage:
                 continue
 
+            print(f"[new_impl] Importo {entity}...")
             records = self._read_csv(file_storage, required_columns)
             if not records:
+                print(f"[new_impl] Nessun record trovato per {entity}")
                 continue
 
             self.store.replace_entity(entity, records)
             summary[entity] = len(records)
+            print(f"[new_impl] Caricati {len(records)} record per {entity}")
         return summary
 
     def _read_csv(self, file_storage, required_columns: Iterable[str]) -> List[Dict[str, str]]:

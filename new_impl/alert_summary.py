@@ -32,12 +32,6 @@ class AlertSummaryStore:
         return self.all_alerts()
 
     def to_csv(self) -> bytes:
-        if not self._alerts:
-            output = io.StringIO()
-            writer = csv.writer(output)
-            writer.writerow(["alert_type", "account_id", "account_name", "contact_id", "contact_name", "details", "triggered_at"])
-            return output.getvalue().encode("utf-8")
-
         fieldnames = [
             "alert_type",
             "account_id",
@@ -45,7 +39,7 @@ class AlertSummaryStore:
             "contact_id",
             "contact_name",
             "details",
-            "triggered_at",
+            "message",
         ]
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=fieldnames)
