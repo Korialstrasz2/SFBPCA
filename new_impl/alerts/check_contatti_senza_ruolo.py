@@ -30,10 +30,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         details = "Contatto senza ruoli assegnati nella relazione AccountContact."
         message = "\n".join(
             [
-                "Passo 1 ➜ Ho analizzato le relazioni AccountContact dell'account.",
-                "Passo 2 ➜ Ho cercato ruoli valorizzati per ogni contatto (ignorando i Referenti SOL-APP).",
-                f"Passo 3 ➜ Il contatto {contact_name} non presenta ruoli associati.",
-                "Suggerimento: aggiorna il campo Roles sulla relazione AccountContactRelation.",
+                f"Il contatto {contact_name} non presenta ruoli associati.",
             ]
         )
 

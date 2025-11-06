@@ -44,14 +44,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         details = "; ".join(
             f"{name} ➜ {roles}" for name, roles in zip(contact_names, roles_by_contact, strict=False)
         )
-        message_lines = [
-            "Passo 1 ➜ Ho raggruppato i contatti per nome e cognome ignorando i Referenti SOL-APP.",
-            "Passo 2 ➜ Ho confrontato l'elenco dei ruoli per ciascun contatto omonimo.",
-            "Passo 3 ➜ Ho trovato differenze tra i ruoli assegnati:",
-        ]
+        message_lines = []
         for name, roles in zip(contact_names, roles_by_contact, strict=False):
             message_lines.append(f"    - {name}: {roles}")
-        message_lines.append("Suggerimento: uniforma i ruoli o verifica che non si tratti di un duplicato.")
         message = "\n".join(message_lines)
 
         summary.record(

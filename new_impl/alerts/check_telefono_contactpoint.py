@@ -58,24 +58,20 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
                 continue
             details = "Numeri presenti ma non coincidono tra Contact e ContactPointPhone."
 
-        message_lines = [
-            "Passo 1 ➜ Ho raccolto i numeri fissi e mobili indicati sul contatto.",
-            "Passo 2 ➜ Ho confrontato i ContactPointPhone collegati all'Individual associato.",
-        ]
+        message_lines = []
         if normalised_contact_numbers:
             message_lines.append(
-                "Passo 3 ➜ Numeri sul contatto: "
+                "Numeri sul contatto: "
                 + ", ".join(f"{label}={value}" for label, value in normalised_contact_numbers.items())
             )
         else:
-            message_lines.append("Passo 3 ➜ Nessun numero memorizzato sul contatto.")
+            message_lines.append("Nessun numero memorizzato sul contatto.")
         if point_values:
             message_lines.append(
-                "Passo 4 ➜ Numeri su ContactPointPhone: " + ", ".join(point_values)
+                "Numeri su ContactPointPhone: " + ", ".join(point_values)
             )
         else:
-            message_lines.append("Passo 4 ➜ Nessun ContactPointPhone con numero valorizzato.")
-        message_lines.append("Suggerimento: allinea i numeri tra il record Contact e i ContactPointPhone.")
+            message_lines.append("Nessun ContactPointPhone con numero valorizzato.")
         message = "\n".join(message_lines)
 
         summary.record(

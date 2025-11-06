@@ -48,17 +48,14 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             details = "Email presenti ma non coincidono tra Contact e ContactPointEmail."
 
         message_lines = [
-            "Passo 1 ➜ Ho estratto l'email principale dal record Contact.",
-            "Passo 2 ➜ Ho confrontato le email memorizzate sui ContactPointEmail collegati.",
-            f"Passo 3 ➜ Email sul contatto: {email_on_contact or 'assenza'}.",
+            f"Email sul contatto: {email_on_contact or 'assenza'}.",
         ]
         if emails_on_points:
             message_lines.append(
-                "Passo 4 ➜ Email su ContactPointEmail: " + ", ".join(emails_on_points)
+                "Email su ContactPointEmail: " + ", ".join(emails_on_points)
             )
         else:
-            message_lines.append("Passo 4 ➜ Nessun ContactPointEmail valorizzato.")
-        message_lines.append("Suggerimento: sincronizza l'indirizzo email tra Contact e ContactPointEmail.")
+            message_lines.append("Nessun ContactPointEmail valorizzato.")
         message = "\n".join(message_lines)
 
         summary.record(

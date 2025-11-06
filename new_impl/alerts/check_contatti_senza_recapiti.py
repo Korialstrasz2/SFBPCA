@@ -32,10 +32,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         details = "Contatto privo di recapiti (telefono o email) compilati."
         message = "\n".join(
             [
-                "Passo 1 ➜ Ho raccolto i recapiti mobili, fissi ed email per ciascun contatto.",
-                "Passo 2 ➜ Ho verificato che almeno uno dei campi fosse valorizzato.",
-                f"Passo 3 ➜ Il contatto {contact_name} non ha alcun recapito disponibile.",
-                "Suggerimento: compila almeno un numero o un indirizzo email nel record Contact.",
+                f"Il contatto {contact_name} non ha alcun recapito disponibile.",
             ]
         )
 

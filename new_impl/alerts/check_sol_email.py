@@ -43,12 +43,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             f"Tipologie trovate: {', '.join(types_found) if types_found else 'nessuna'}."
         )
 
-        message_lines = [
-            "Passo 1 ➜ Ho isolato i contatti con ruolo Referente SOL-APP sull'account.",
-            "Passo 2 ➜ Ho letto tutti i ContactPointEmail collegati all'Individual associato.",
-            "Passo 3 ➜ Nessun record di tipo 'E-mail SOL' presenta un indirizzo compilato.",
-            "Suggerimento: crea o completa il ContactPointEmail con tipo 'E-mail SOL' per il referente.",
-        ]
+        message_lines = []
         message = "\n".join(message_lines)
 
         summary.record(

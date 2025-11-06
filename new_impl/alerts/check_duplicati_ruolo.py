@@ -70,13 +70,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             f"con stesso nominativo."
         )
         message_lines = [
-            "Passo 1 ➜ Ho filtrato i contatti dell'account ignorando i Referenti SOL-APP.",
-            "Passo 2 ➜ Ho confrontato ruolo, nome e identificativi fiscali per individuare duplicati.",
-            "Passo 3 ➜ Ho trovato i seguenti contatti con dati coincidenti:",
         ]
         message_lines.extend([f"    - {name}" for name in contact_names])
-        message_lines.append("Suggerimento: verifica quale contatto mantenere e uniforma gli identificativi in Salesforce.")
-        message = "\n".join(message_lines)
+        message = ""
 
         summary.record(
             {
