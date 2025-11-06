@@ -69,6 +69,38 @@
   </p>
   <div class="alert-summary" id="alert-summary">
     <div class="alert-summary-controls">
+      <div class="summary-filters" role="group" aria-label="Filtri riepilogo allerte">
+        <label class="summary-filter">
+          <span>Account</span>
+          <select id="filter-account">
+            <option value="">Tutti</option>
+          </select>
+        </label>
+        <label class="summary-filter">
+          <span>Tipo di allerta</span>
+          <select id="filter-alert-type">
+            <option value="">Tutti</option>
+          </select>
+        </label>
+        <label class="summary-filter">
+          <span>Ruolo contatto</span>
+          <select id="filter-contact-role">
+            <option value="">Tutti</option>
+          </select>
+        </label>
+        <label class="summary-filter">
+          <span>Categoria</span>
+          <select id="filter-category">
+            <option value="">Tutte</option>
+          </select>
+        </label>
+        <label class="summary-filter">
+          <span>Focus dati</span>
+          <select id="filter-data-focus">
+            <option value="">Tutti</option>
+          </select>
+        </label>
+      </div>
       <button id="download-alerts" class="secondary" type="button" disabled>Scarica CSV</button>
     </div>
     <table id="alert-summary-table" class="alert-summary-table" hidden>
@@ -77,6 +109,9 @@
           <th scope="col">Tipo di allerta</th>
           <th scope="col">Account</th>
           <th scope="col">Contatti</th>
+          <th scope="col">Ruoli</th>
+          <th scope="col">Categoria</th>
+          <th scope="col">Focus dati</th>
           <th scope="col">Dettagli</th>
         </tr>
       </thead>

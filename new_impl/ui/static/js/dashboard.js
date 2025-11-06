@@ -12,10 +12,16 @@
   const summaryTable = document.getElementById('alert-summary-table');
   const summaryTableBody = summaryTable ? summaryTable.querySelector('tbody') : null;
   const summaryEmpty = document.getElementById('alert-summary-empty');
+  const filterAccount = document.getElementById('filter-account');
+  const filterAlertType = document.getElementById('filter-alert-type');
+  const filterContactRole = document.getElementById('filter-contact-role');
+  const filterCategory = document.getElementById('filter-category');
+  const filterDataFocus = document.getElementById('filter-data-focus');
   const stepButtons = document.querySelectorAll('.step-button');
   const panels = document.querySelectorAll('.panel');
 
   let sectionIdCounter = 0;
+  let currentSummaryRows = [];
 
   const SOQL_BUILDERS = {
     accounts: (ids) =>
@@ -275,31 +281,158 @@
     }
   }
 
+  function normaliseFilterValue(value) {
+    return (value || '').trim();
+  }
+
+  function getAccountLabel(row) {
+    return normaliseFilterValue(row.account_name || row.account_id || 'Sconosciuto');
+  }
+
+  function getRoleList(row) {
+    return (row.contact_roles || '')
+      .split(/[,;]+/)
+      .map((role) => normaliseFilterValue(role))
+      .filter(Boolean);
+  }
+
+  function populateFilter(select, values, placeholder) {
+    if (!select) return;
+    const previous = select.value;
+    const options = [`<option value="">${escapeHtml(placeholder)}</option>`];
+    values.forEach((value) => {
+      options.push(`<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`);
+    });
+    select.innerHTML = options.join('');
+    if (values.includes(previous)) {
+      select.value = previous;
+    } else {
+      select.value = '';
+    }
+  }
+
+  function toSortedArray(set) {
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+  }
+
+  function populateSummaryFilters(rows) {
+    const accountValues = new Set();
+    const alertTypes = new Set();
+    const categories = new Set();
+    const dataFocusValues = new Set();
+    const roleValues = new Set();
+
+    rows.forEach((row) => {
+      const account = getAccountLabel(row);
+      if (account) accountValues.add(account);
+      const alertType = normaliseFilterValue(row.alert_type);
+      if (alertType) alertTypes.add(alertType);
+      const category = normaliseFilterValue(row.issue_category);
+      if (category) categories.add(category);
+      const dataFocus = normaliseFilterValue(row.data_focus);
+      if (dataFocus) dataFocusValues.add(dataFocus);
+      getRoleList(row).forEach((role) => roleValues.add(role));
+    });
+
+    populateFilter(filterAccount, toSortedArray(accountValues), 'Tutti');
+    populateFilter(filterAlertType, toSortedArray(alertTypes), 'Tutti');
+    populateFilter(filterContactRole, toSortedArray(roleValues), 'Tutti');
+    populateFilter(filterCategory, toSortedArray(categories), 'Tutte');
+    populateFilter(filterDataFocus, toSortedArray(dataFocusValues), 'Tutti');
+  }
+
+  function resetSummaryFilters() {
+    populateFilter(filterAccount, [], 'Tutti');
+    populateFilter(filterAlertType, [], 'Tutti');
+    populateFilter(filterContactRole, [], 'Tutti');
+    populateFilter(filterCategory, [], 'Tutte');
+    populateFilter(filterDataFocus, [], 'Tutti');
+  }
+
+  function renderSummaryTable(rows) {
+    if (!summaryTable || !summaryTableBody || !summaryEmpty) return;
+    if (!rows.length) {
+      summaryTableBody.innerHTML =
+        '<tr class="empty"><td colspan="7">Nessuna riga corrispondente ai filtri selezionati.</td></tr>';
+    } else {
+      const markup = rows
+        .map(
+          (row) => `
+            <tr>
+              <td>${escapeHtml(row.alert_type)}</td>
+              <td>${escapeHtml(getAccountLabel(row))}</td>
+              <td>${escapeHtml(row.contact_name || row.contact_id || 'N/D')}</td>
+              <td>${escapeHtml(row.contact_roles || 'N/D')}</td>
+              <td>${escapeHtml(row.issue_category || 'N/D')}</td>
+              <td>${escapeHtml(row.data_focus || 'N/D')}</td>
+              <td>${escapeHtml(row.details || '')}</td>
+            </tr>
+          `,
+        )
+        .join('');
+      summaryTableBody.innerHTML = markup;
+    }
+    summaryTable.hidden = false;
+    summaryEmpty.hidden = true;
+  }
+
+  function applySummaryFilters() {
+    if (!summaryTable || !summaryTableBody || !summaryEmpty) return;
+    if (!currentSummaryRows.length) {
+      summaryTable.hidden = true;
+      summaryEmpty.hidden = false;
+      summaryTableBody.innerHTML = '';
+      return;
+    }
+
+    const filters = {
+      account: filterAccount ? filterAccount.value : '',
+      alertType: filterAlertType ? filterAlertType.value : '',
+      contactRole: filterContactRole ? filterContactRole.value : '',
+      category: filterCategory ? filterCategory.value : '',
+      dataFocus: filterDataFocus ? filterDataFocus.value : '',
+    };
+
+    const filtered = currentSummaryRows.filter((row) => {
+      if (filters.account && getAccountLabel(row) !== filters.account) {
+        return false;
+      }
+      if (filters.alertType && normaliseFilterValue(row.alert_type) !== filters.alertType) {
+        return false;
+      }
+      if (filters.contactRole) {
+        const roles = getRoleList(row);
+        if (!roles.includes(filters.contactRole)) {
+          return false;
+        }
+      }
+      if (filters.category && normaliseFilterValue(row.issue_category) !== filters.category) {
+        return false;
+      }
+      if (filters.dataFocus && normaliseFilterValue(row.data_focus) !== filters.dataFocus) {
+        return false;
+      }
+      return true;
+    });
+
+    renderSummaryTable(filtered);
+  }
+
   function renderSummary(rows) {
     if (!downloadButton || !summaryTable || !summaryTableBody || !summaryEmpty) return;
-    if (!rows.length) {
+    currentSummaryRows = Array.isArray(rows) ? rows : [];
+    if (!currentSummaryRows.length) {
       summaryTable.hidden = true;
       summaryEmpty.hidden = false;
       downloadButton.disabled = true;
       summaryTableBody.innerHTML = '';
+      resetSummaryFilters();
       return;
     }
-    const markup = rows
-      .map(
-        (row) => `
-          <tr>
-            <td>${escapeHtml(row.alert_type)}</td>
-            <td>${escapeHtml(row.account_name || row.account_id || 'Sconosciuto')}</td>
-            <td>${escapeHtml(row.contact_name || row.contact_id || 'N/D')}</td>
-            <td>${escapeHtml(row.details || '')}</td>
-          </tr>
-        `,
-      )
-      .join('');
-    summaryTableBody.innerHTML = markup;
-    summaryTable.hidden = false;
-    summaryEmpty.hidden = true;
+
     downloadButton.disabled = false;
+    populateSummaryFilters(currentSummaryRows);
+    applySummaryFilters();
   }
 
   async function downloadAlerts() {
@@ -363,6 +496,12 @@
   if (downloadButton) {
     downloadButton.addEventListener('click', downloadAlerts);
   }
+
+  [filterAccount, filterAlertType, filterContactRole, filterCategory, filterDataFocus].forEach((element) => {
+    if (element) {
+      element.addEventListener('change', applySummaryFilters);
+    }
+  });
 
   if (stepButtons.length) {
     document.querySelector('.steps').addEventListener('click', handleStepClick);

@@ -5,10 +5,26 @@ from __future__ import annotations
 from typing import Dict, Iterable, List, Optional, Sequence
 
 from .alert_summary import ALERT_SUMMARY, AlertSummaryStore
-from .alerts import contact_doppio, ruolo_doppio
+from .alerts import (
+    check_contatti_senza_recapiti,
+    check_contatti_senza_ruolo,
+    check_duplicati_ruolo,
+    check_email_contactpoint,
+    check_nominali_ruoli_differenti,
+    check_sol_email,
+    check_telefono_contactpoint,
+)
 from .data_store import DATA_STORE, SalesforceRelationshipStore
 
-ALERT_MODULES = (contact_doppio, ruolo_doppio)
+ALERT_MODULES = (
+    check_duplicati_ruolo,
+    check_contatti_senza_ruolo,
+    check_contatti_senza_recapiti,
+    check_nominali_ruoli_differenti,
+    check_telefono_contactpoint,
+    check_email_contactpoint,
+    check_sol_email,
+)
 
 
 class AlertLoopRunner:

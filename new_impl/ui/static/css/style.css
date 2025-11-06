@@ -411,12 +411,42 @@ button.secondary:hover {
 
 .alert-summary-controls {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
 }
 
 .alert-summary-controls .secondary[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.summary-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.summary-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.summary-filter select {
+  min-width: 140px;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd2d9;
+  padding: 0.4rem 0.6rem;
+  background: #fff;
+  font: inherit;
+}
+
+.summary-filter select:focus {
+  outline: 3px solid rgba(31, 75, 153, 0.25);
+  border-color: #1f4b99;
 }
 
 .alert-summary-empty {
@@ -449,6 +479,12 @@ button.secondary:hover {
 
 .alert-summary-table tbody tr:nth-child(even) {
   background: rgba(31, 75, 153, 0.06);
+}
+
+.alert-summary-table tr.empty td {
+  text-align: center;
+  font-style: italic;
+  color: #52606d;
 }
 
 .alert-objects {
