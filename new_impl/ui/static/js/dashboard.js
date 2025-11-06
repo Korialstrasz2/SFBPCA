@@ -57,7 +57,7 @@
     accounts: (ids) =>
       `SELECT Id, Name\nFROM Account\nWHERE Id IN (${formatIds(ids)})\nORDER BY Name`,
     contacts: (ids) =>
-      `SELECT Id, FirstName, LastName, IndividualId, AccountId, FiscalCode__c, VATNumber__c, MobilePhone, HomePhone, Email\nFROM Contact\nWHERE Id IN (\n  SELECT ContactId FROM AccountContactRelation\n  WHERE AccountId IN (${formatIds(ids)})\n)\nORDER BY LastName, FirstName`,
+      `SELECT Id, FirstName, LastName, IndividualId, AccountId, FiscalCode__c, VATNumber__c, MobilePhone, Phone, Email\nFROM Contact\nWHERE Id IN (\n  SELECT ContactId FROM AccountContactRelation\n  WHERE AccountId IN (${formatIds(ids)})\n)\nORDER BY LastName, FirstName`,
     individuals: (ids) =>
       `SELECT Id, FirstName, LastName\nFROM Individual\nWHERE Id IN (\n  SELECT IndividualId FROM Contact\n  WHERE AccountId IN (${formatIds(ids)}) AND IndividualId != null\n)\nORDER BY LastName, FirstName`,
     account_contact_relations: (ids) =>
@@ -105,7 +105,7 @@
       'FiscalCode__c',
       'VATNumber__c',
       'MobilePhone',
-      'HomePhone',
+      'Phone',
       'Email',
     ],
     individuals: ['Id', 'FirstName', 'LastName'],

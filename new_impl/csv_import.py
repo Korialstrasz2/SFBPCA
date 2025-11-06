@@ -24,7 +24,7 @@ class CSVImportCoordinator:
             "FiscalCode__c",
             "VATNumber__c",
             "MobilePhone",
-            "HomePhone",
+            "Phone",
             "Email",
         ),
         "individuals": ("Id", "FirstName", "LastName"),

@@ -25,7 +25,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
 
         # Passo 1: normalizzo i numeri presenti sul contatto.
         numbers_on_contact = [
-            ("Telefono fisso", contact.get("HomePhone")),
+            ("Telefono fisso", contact.get("Phone")),
             ("Telefono mobile", contact.get("MobilePhone")),
         ]
         normalised_contact_numbers = {}
