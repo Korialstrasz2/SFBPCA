@@ -42,6 +42,10 @@ def create_app() -> Flask:
     def index() -> str:
         return render_template("index.html", entities=SUPPORTED_ENTITIES, entity_labels=ENTITY_LABELS)
 
+    @app.route("/guide")
+    def guide() -> str:
+        return render_template("guide.html", entities=SUPPORTED_ENTITIES, entity_labels=ENTITY_LABELS)
+
     @app.post("/api/import")
     def import_csv() -> Response:
         print("[Import] Ricevuta richiesta di caricamento dei CSV.")
