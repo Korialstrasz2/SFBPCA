@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="guide-intro" aria-labelledby="guide-heading">
+  <h2 id="guide-heading">Guida rapida per gli sviluppatori</h2>
+  <p>
+    Questa pagina riepiloga i passaggi da seguire quando serve estendere il workspace Salesforce con
+    nuovi campi o nuove allerte. Ogni riferimento punta a file e strutture presenti nella cartella
+    <code>new_impl</code>.
+  </p>
+</section>
+
+<section class="guide-section" aria-labelledby="field-heading">
+  <h3 id="field-heading">Aggiungere un nuovo campo a un oggetto</h3>
+  <ol>
+    <li>
+      <strong>Allinea le query SOQL e i metadati front-end.</strong>
+      <ul>
+        <li>
+          Aggiorna il builder corrispondente in
+          <code>new_impl/ui/static/js/dashboard.js</code> (costante <code>SOQL_BUILDERS</code>) per
+          includere il campo nella query generata per l'oggetto.
+        </li>
+        <li>
+          Aggiorna gli array <code>EXPECTED_COLUMNS</code>, <code>TITLES</code> o
+          <code>SUPPORTED_ENTITIES</code> se la nuova colonna deve essere riconosciuta dal controllo
+          CSV lato browser.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <strong>Accetta il campo in fase di import.</strong>
+      <ul>
+        <li>
+          Estendi la mappa <code>EXPECTED_COLUMNS</code> in
+          <code>new_impl/csv_import.py</code> così che il validatore accetti il nuovo attributo.
+        </li>
+        <li>
+          Verifica che <code>CSVImportCoordinator</code> passi il valore a
+          <code>SalesforceRelationshipStore.replace_entity</code> senza scartarlo.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <strong>Propaga il dato nel data store.</strong>
+      <ul>
+        <li>
+          In <code>new_impl/data_store.py</code> controlla i metodi
+          <code>replace_entity</code>, <code>_rebuild_indexes</code> e gli helper
+          (<code>describe_account</code>, <code>resolve_*()</code>) per assicurarti che il campo sia
+          disponibile nelle strutture derivate o negli indici.
+        </li>
+        <li>
+          Valuta se aggiornare <code>AccountContext</code> o le strutture di supporto in modo da
+          semplificare l'accesso al nuovo dato nei moduli di allerta.
+        </li>
+      </ul>
+    </li>
+    <li>
+      <strong>Rifinisci l'esposizione nelle allerte e nei riepiloghi.</strong>
+      <ul>
+        <li>
+          Esamina ogni modulo in <code>new_impl/alerts/</code> che potrebbe dipendere dal nuovo
+          campo e aggiorna la logica per considerarlo.
+        </li>
+        <li>
+          Se il campo deve apparire nell'export o nei messaggi, assicurati che venga incluso quando
+          si compila il dizionario passato a <code>AlertSummaryStore.record()</code> (vedi
+          <code>new_impl/alert_summary.py</code> per i nomi dei campi supportati).
+        </li>
+      </ul>
+    </li>
+    <li>
+      <strong>Controlla l'interfaccia utente.</strong>
+      <ul>
+        <li>
+          Aggiorna eventuali componenti che mostrano il campo (ad esempio tabelle o filtri nel
+          dashboard) per evitare discrepanze tra back-end e front-end.
+        </li>
+        <li>Esegui un import completo e avvia le allerte per validare il flusso end-to-end.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<section class="guide-section" aria-labelledby="alert-heading">
+  <h3 id="alert-heading">Aggiungere una nuova allerta</h3>
+  <ol>
+    <li>
+      <strong>Registra il modulo nel ciclo di esecuzione.</strong>
+      <ul>
+        <li>
+          Definisci la funzione <code>run()</code> e l'eventuale <code>reset_state()</code> nel nuovo
+          file all'interno di <code>new_impl/alerts/</code>. Puoi partire da uno dei moduli esistenti
+          come esempio.</li>
+        <li>
+          Esporta il modulo in <code>new_impl/alerts/__init__.py</code> e aggiungilo alla tupla
+          <code>ALERT_MODULES</code> di <code>new_impl/alert_loop.py</code> per inserirlo nella
+          sequenza di esecuzione.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Compila l'output dell'allerta.</strong>
+      <ul>
+        <li>
+          Usa <code>AlertSummaryStore.record()</code> per salvare i risultati, impostando sempre i
+          campi previsti (tipo, account, contatti, messaggi, ecc.). Consulta
+          <code>FIELDNAMES</code> in <code>new_impl/alert_summary.py</code> per conoscere la struttura
+          completa.</li>
+        <li>
+          Quando servono dati condivisi fra account, usa i servizi disponibili in
+          <code>new_impl/data_store.py</code> o gli helper di <code>new_impl/alerts/common.py</code>
+          anziché duplicare logica di navigazione.</li>
+        <li>
+          Aggiorna eventuali statistiche o filtri nel front-end solo se il nuovo tipo di allerta ha
+          esigenze particolari (le liste e i riepiloghi si adattano automaticamente al nuovo valore
+          di <code>alert_type</code>).</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Valida il comportamento.</strong>
+      <ul>
+        <li>
+          Esegui il ciclo allerte con dati di test e verifica sia la lista dettagliata sia il file
+          Excel generato da <code>/api/alerts/download</code>.</li>
+        <li>
+          Aggiorna o aggiungi test automatici se disponibili per coprire i casi limite della nuova
+          logica.</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+{% endblock %}
