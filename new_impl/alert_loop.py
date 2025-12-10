@@ -28,7 +28,7 @@ ALERT_MODULES = (
 
 
 class AlertLoopRunner:
-    """Esegue i moduli di allerta sugli account caricati."""
+    """Esegue i moduli di allerta sugli account caricati. """
 
     def __init__(
         self,
