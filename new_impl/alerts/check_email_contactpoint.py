@@ -29,6 +29,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         contact_name = DATA_STORE.resolve_contact_name(contact_id)
 
         email_on_contact = _normalise_email(contact.get("Email"))
+        email_on_contact = '' if email_on_contact.lower() == 'TOOL-VUOTO'.lower() else email_on_contact
         contact_points = DATA_STORE.get_contact_points_for_contact(contact_id)["emails"]
         emails_on_points: List[str] = [
             _normalise_email(point.get("EmailAddress"))
