@@ -14,7 +14,7 @@ REFERENTE_SOL_ROLE = "referente sol-app"
 def normalise_text(value: str | None) -> str:
     """Normalizza una stringa per confronti case-insensitive."""
 
-    return (value or "").strip().lower()
+    return (value or "TOOL-VUOTO").strip().lower()
 
 
 def normalise_name(contact: Dict[str, str]) -> str:

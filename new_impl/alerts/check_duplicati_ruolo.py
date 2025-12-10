@@ -38,6 +38,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
                 f"[{account_id}] Contatto {contact_id} senza nome normalizzato, escluso dal controllo duplicati ruolo."
             )
             continue
+        silos_token = normalise_text(contact.get("Company__c"))
 
         identifiers = [
             ("Codice fiscale", normalise_text(contact.get("FiscalCode__c"))),
@@ -57,11 +58,11 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
                         f"[{account_id}] Identificativo {label} mancante per contatto {contact_id}, salto combinazione."
                     )
                     continue
-                key = (role_token, label, token, name_token)
+                key = (role_token, label, token, silos_token, name_token)
                 buckets.setdefault(key, []).append(contact_id)
 
     # Passo 2: individuo i gruppi con più di un contatto.
-    for (role_token, label, token, name_token), contact_ids in buckets.items():
+    for (role_token, label, token, silos_token, name_token), contact_ids in buckets.items():
         unique_ids = list(dict.fromkeys(contact_ids))
         if len(unique_ids) < 2:
             log_loop_event(
@@ -69,7 +70,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             )
             continue
 
-        cache_key = (account_id, role_token, label, token)
+        cache_key = (account_id, role_token, label, token, silos_token)
         if cache_key in _EMITTED:
             log_loop_event(
                 f"[{account_id}] Allerta duplicati già emessa per ruolo '{role_token}' e {label} '{token}', salto." 
