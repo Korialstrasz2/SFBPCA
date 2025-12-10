@@ -232,5 +232,16 @@
       <p id="summary-stats-empty" class="alert-summary-empty">Esegui il ciclo allerte per visualizzare le statistiche riepilogative.</p>
     </div>
   </div>
+  <div class="log-panel" aria-labelledby="log-panel-title" aria-live="polite">
+    <div class="log-panel-header">
+      <h3 id="log-panel-title">Registro esecuzione</h3>
+      <div class="log-actions">
+        <button id="refresh-log" class="secondary" type="button">Aggiorna log</button>
+        <button id="download-log" class="secondary" type="button" disabled>Scarica log</button>
+      </div>
+    </div>
+    <pre id="run-log-output" class="run-log" aria-live="polite" aria-label="Log delle operazioni" hidden></pre>
+    <p id="run-log-empty" class="run-log-empty">Esegui un'importazione o un ciclo allerte per popolare il registro.</p>
+  </div>
 </section>
 {% endblock %}

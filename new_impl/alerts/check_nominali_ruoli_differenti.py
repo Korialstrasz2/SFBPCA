@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..run_log import RUN_LOG
 from .common import iter_contacts, normalise_name
 
 # Nessuno stato persistente necessario, ma manteniamo la firma coerente
@@ -25,6 +26,11 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
     for contact, roles in iter_contacts(account_context):
         name_token = normalise_name(contact)
         if not name_token:
+            RUN_LOG.debug(
+                "Contatto ignorato: nominativo non valido",
+                account_id=account_id,
+                contact_id=contact["Id"],
+            )
             continue
         buckets.setdefault(name_token, []).append((contact["Id"], roles))
 
@@ -40,6 +46,13 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         contact_ids = [cid for cid, _ in entries]
         contact_names = [DATA_STORE.resolve_contact_name(cid) for cid in contact_ids]
         roles_by_contact = [", ".join(roles) or "Nessun ruolo" for _, roles in entries]
+
+        RUN_LOG.info(
+            "Omonimia rilevata con ruoli differenti",
+            account_id=account_id,
+            account_name=account_name,
+            contact_count=len(contact_ids),
+        )
 
         details = "; ".join(
             f"{name} ➜ {roles}" for name, roles in zip(contact_names, roles_by_contact, strict=False)

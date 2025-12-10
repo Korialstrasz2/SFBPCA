@@ -31,6 +31,10 @@
     alertsWithoutContact: document.getElementById('stat-alerts-without-contact'),
     averageAlerts: document.getElementById('stat-average-alerts'),
   };
+  const refreshLogButton = document.getElementById('refresh-log');
+  const downloadLogButton = document.getElementById('download-log');
+  const runLogOutput = document.getElementById('run-log-output');
+  const runLogEmpty = document.getElementById('run-log-empty');
   const stepButtons = document.querySelectorAll('.step-button');
   const panels = document.querySelectorAll('.panel');
   const bulkFileInput = document.getElementById('bulk-file-input');
@@ -412,6 +416,8 @@
       setFeedback(imported ? `Import eseguito per ${imported}.` : 'Nessun file elaborato.', 'success');
     } catch (error) {
       setFeedback(error.message || 'Import non riuscito.', 'error');
+    } finally {
+      await refreshRunLog();
     }
   }
 
@@ -465,6 +471,72 @@
     }
   }
 
+  function renderRunLog(entries) {
+    const lines = Array.isArray(entries) ? entries : [];
+    if (!runLogOutput || !runLogEmpty) return;
+
+    if (!lines.length) {
+      runLogOutput.hidden = true;
+      runLogEmpty.hidden = false;
+      if (downloadLogButton) downloadLogButton.disabled = true;
+      return;
+    }
+
+    const formatted = lines
+      .map((entry) => {
+        const timestamp = entry.timestamp || '';
+        const level = entry.level || '';
+        const message = entry.message || '';
+        const context = entry.context && typeof entry.context === 'object' ? entry.context : {};
+        const contextText = Object.entries(context)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(' ');
+        return `${timestamp} [${level}] ${message}${contextText ? ` ${contextText}` : ''}`;
+      })
+      .join('\n');
+
+    runLogOutput.textContent = formatted;
+    runLogOutput.hidden = false;
+    runLogEmpty.hidden = true;
+    if (downloadLogButton) downloadLogButton.disabled = false;
+  }
+
+  async function refreshRunLog() {
+    if (!runLogOutput) return;
+    try {
+      const response = await fetch('/api/logs');
+      if (!response.ok) {
+        throw new Error('Impossibile recuperare il registro.');
+      }
+      const payload = await response.json();
+      renderRunLog(payload.entries || []);
+    } catch (error) {
+      runLogOutput.textContent = error.message || 'Impossibile leggere il registro.';
+      runLogOutput.hidden = false;
+      if (runLogEmpty) runLogEmpty.hidden = true;
+    }
+  }
+
+  async function downloadRunLog() {
+    try {
+      const response = await fetch('/api/logs/download');
+      if (!response.ok) {
+        throw new Error('Impossibile scaricare il registro.');
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'registro_esecuzione.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert(error.message || 'Download del registro non riuscito.');
+    }
+  }
+
   async function runAlerts() {
     if (!alertButton) return;
     alertButton.disabled = true;
@@ -486,6 +558,7 @@
     } finally {
       alertButton.disabled = false;
       alertButton.textContent = 'Esegui il ciclo allerte';
+      await refreshRunLog();
     }
   }
 
@@ -874,6 +947,14 @@
     downloadButton.addEventListener('click', downloadAlerts);
   }
 
+  if (refreshLogButton) {
+    refreshLogButton.addEventListener('click', refreshRunLog);
+  }
+
+  if (downloadLogButton) {
+    downloadLogButton.addEventListener('click', downloadRunLog);
+  }
+
   if (summaryTabsContainer) {
     summaryTabsContainer.addEventListener('click', handleSummaryTabClick);
   }
@@ -890,4 +971,5 @@
 
   addInitialSection();
   renderQueryResults([]);
+  refreshRunLog();
 })();

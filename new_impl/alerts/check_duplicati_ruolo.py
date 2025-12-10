@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..run_log import RUN_LOG
 from .common import iter_contacts, normalise_name, normalise_text
 
 # Cache per evitare di emettere la stessa allerta più volte
@@ -33,6 +34,11 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         contact_id = contact["Id"]
         name_token = normalise_name(contact)
         if not name_token:
+            RUN_LOG.debug(
+                "Contatto ignorato: nominativo non valido",
+                account_id=account_id,
+                contact_id=contact_id,
+            )
             continue
 
         identifiers = [
@@ -42,10 +48,21 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         for role in roles:
             role_token = normalise_text(role)
             if not role_token:
+                RUN_LOG.debug(
+                    "Ruolo ignorato perché vuoto",
+                    account_id=account_id,
+                    contact_id=contact_id,
+                )
                 continue
             _ROLE_LABELS.setdefault(role_token, role)
             for label, token in identifiers:
                 if not token:
+                    RUN_LOG.debug(
+                        "Identificativo assente per combinazione",
+                        account_id=account_id,
+                        contact_id=contact_id,
+                        label=label,
+                    )
                     continue
                 key = (role_token, label, token, name_token)
                 buckets.setdefault(key, []).append(contact_id)
@@ -63,6 +80,16 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
 
         role_label = _ROLE_LABELS.get(role_token, role_token)
         contact_names = [DATA_STORE.resolve_contact_name(cid) for cid in unique_ids]
+
+        RUN_LOG.info(
+            "Trovati contatti duplicati per ruolo e identificativo",
+            account_id=account_id,
+            account_name=account_name,
+            role=role_label,
+            identifier_label=label,
+            identifier=token,
+            contacts=len(contact_names),
+        )
 
         # Passo 3: costruisco messaggi di dettaglio in italiano.
         details = (

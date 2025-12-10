@@ -15,6 +15,7 @@ from .alerts import (
     check_telefono_contactpoint,
 )
 from .data_store import DATA_STORE, SalesforceRelationshipStore
+from .run_log import RUN_LOG
 
 ALERT_MODULES = (
     check_duplicati_ruolo,
@@ -46,20 +47,22 @@ class AlertLoopRunner:
             module.reset_state()
 
         targets = list(self._iter_targets(account_ids))
-        print(f"[Allerte] Trovati {len(targets)} account da analizzare.")
+        RUN_LOG.info("Account pronti per l'analisi", count=len(targets))
 
         for index, account_id in enumerate(targets, start=1):
             context = self.store.describe_account(account_id)
             account_name = self.store.resolve_account_name(account_id)
-            print(
-                f"[Allerte] ({index}/{len(targets)}) Analisi dell'account "
-                f"{account_name} ({account_id})."
+            RUN_LOG.info(
+                "Analisi account",
+                position=f"{index}/{len(targets)}",
+                account_id=account_id,
+                account_name=account_name,
             )
             for module in ALERT_MODULES:
                 module.run(context, summary=self.summary)
 
         details = self.summary.all_alerts()
-        print(f"[Allerte] Rilevate {len(details)} allerte complessive.")
+        RUN_LOG.info("Allerte rilevate", count=len(details))
         return {
             "details": details,
             "summary": self.summary.summary_rows(),

@@ -10,6 +10,7 @@ from flask import Flask, Response, jsonify, render_template, request, send_file
 from .alert_loop import ALERT_LOOP
 from .alert_summary import ALERT_SUMMARY
 from .csv_import import IMPORT_COORDINATOR
+from .run_log import RUN_LOG
 
 
 SUPPORTED_ENTITIES = [
@@ -48,21 +49,23 @@ def create_app() -> Flask:
 
     @app.post("/api/import")
     def import_csv() -> Response:
-        print("[Import] Ricevuta richiesta di caricamento dei CSV.")
+        RUN_LOG.reset("import")
+        RUN_LOG.info("Richiesta di caricamento ricevuta.")
         payload = {key: request.files.get(key) for key in SUPPORTED_ENTITIES}
         try:
             summary = IMPORT_COORDINATOR.import_payload(payload)
         except ValueError as error:
-            print(f"[Import] Errore durante il caricamento: {error}")
+            RUN_LOG.error("Errore durante il caricamento", error=str(error))
             return jsonify({"error": str(error)}), 400
-        print(f"[Import] Caricamento completato: {summary}")
+        RUN_LOG.info("Caricamento completato", summary=summary)
         return jsonify({"summary": summary})
 
     @app.post("/api/alerts/run")
     def run_alerts() -> Response:
-        print("[Allerte] Avvio del ciclo di controllo.")
+        RUN_LOG.reset("alerts")
+        RUN_LOG.info("Avvio del ciclo di controllo allerte.")
         results = ALERT_LOOP.run()
-        print("[Allerte] Ciclo completato.")
+        RUN_LOG.info("Ciclo allerte completato.")
         return jsonify(results)
 
     @app.get("/api/alerts/download")
@@ -73,6 +76,20 @@ def create_app() -> Flask:
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
             download_name="riepilogo_allerte.xlsx",
+        )
+
+    @app.get("/api/logs")
+    def get_logs() -> Response:
+        return jsonify({"entries": RUN_LOG.entries()})
+
+    @app.get("/api/logs/download")
+    def download_logs() -> Response:
+        log_bytes = RUN_LOG.to_text().encode("utf-8")
+        return send_file(
+            io.BytesIO(log_bytes),
+            mimetype="text/plain",
+            as_attachment=True,
+            download_name="registro_esecuzione.txt",
         )
 
     return app
