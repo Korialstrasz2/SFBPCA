@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts, normalise_name
 
 # Nessuno stato persistente necessario, ma manteniamo la firma coerente
@@ -25,16 +26,25 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
     for contact, roles in iter_contacts(account_context):
         name_token = normalise_name(contact)
         if not name_token:
+            log_loop_event(
+                f"[{account_id}] Contatto {contact.get('Id', 'sconosciuto')} senza nominativo, escluso dal controllo ruoli."
+            )
             continue
         buckets.setdefault(name_token, []).append((contact["Id"], roles))
 
     # Passo 2: analizzo ogni gruppo alla ricerca di ruoli incoerenti.
     for name_token, entries in buckets.items():
         if len(entries) < 2:
+            log_loop_event(
+                f"[{account_id}] Solo un contatto con nominativo '{name_token}', nessun confronto necessario."
+            )
             continue
 
         normalised_role_sets = {tuple(sorted(role.lower() for role in roles)) for _cid, roles in entries}
         if len(normalised_role_sets) <= 1:
+            log_loop_event(
+                f"[{account_id}] Nominativo '{name_token}' con ruoli omogenei, nessuna allerta."
+            )
             continue
 
         contact_ids = [cid for cid, _ in entries]

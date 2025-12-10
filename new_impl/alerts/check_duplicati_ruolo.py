@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts, normalise_name, normalise_text
 
 # Cache per evitare di emettere la stessa allerta più volte
@@ -33,6 +34,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         contact_id = contact["Id"]
         name_token = normalise_name(contact)
         if not name_token:
+            log_loop_event(
+                f"[{account_id}] Contatto {contact_id} senza nome normalizzato, escluso dal controllo duplicati ruolo."
+            )
             continue
 
         identifiers = [
@@ -42,10 +46,16 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         for role in roles:
             role_token = normalise_text(role)
             if not role_token:
+                log_loop_event(
+                    f"[{account_id}] Ruolo vuoto per contatto {contact_id}, salto tokenizzazione."
+                )
                 continue
             _ROLE_LABELS.setdefault(role_token, role)
             for label, token in identifiers:
                 if not token:
+                    log_loop_event(
+                        f"[{account_id}] Identificativo {label} mancante per contatto {contact_id}, salto combinazione."
+                    )
                     continue
                 key = (role_token, label, token, name_token)
                 buckets.setdefault(key, []).append(contact_id)
@@ -54,10 +64,16 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
     for (role_token, label, token, name_token), contact_ids in buckets.items():
         unique_ids = list(dict.fromkeys(contact_ids))
         if len(unique_ids) < 2:
+            log_loop_event(
+                f"[{account_id}] Solo un contatto per ruolo '{role_token}' e {label} '{token}', nessuna allerta."
+            )
             continue
 
         cache_key = (account_id, role_token, label, token)
         if cache_key in _EMITTED:
+            log_loop_event(
+                f"[{account_id}] Allerta duplicati già emessa per ruolo '{role_token}' e {label} '{token}', salto." 
+            )
             continue
         _EMITTED.add(cache_key)
 

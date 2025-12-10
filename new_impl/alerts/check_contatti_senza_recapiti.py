@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts
 
 
@@ -26,6 +27,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         has_email = bool((contact.get("Email") or "").strip())
 
         if has_mobile or has_email or has_phone_general:
+            log_loop_event(
+                f"[{account_id}] Contatto {contact_id} ha almeno un recapito, nessuna allerta recapiti."
+            )
             continue
 
         contact_name = DATA_STORE.resolve_contact_name(contact_id)

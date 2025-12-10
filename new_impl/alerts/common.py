@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Dict, Iterable, Iterator, List, Sequence, Tuple
 
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 
 # Costante per riconoscere il ruolo da escludere dai check standard.
 REFERENTE_SOL_ROLE = "referente sol-app"
@@ -55,10 +56,17 @@ def iter_contacts(
     for contact in account_context.contacts:
         contact_id = contact.get("Id")
         if not contact_id:
+            log_loop_event(
+                f"Contatto senza Id in account {account_context.account_id}, ignorato."
+            )
             continue
 
         roles = extract_roles(contact)
         if not include_referente_sol and has_referente_sol_role(roles):
+            log_loop_event(
+                f"Contatto {contact_id} ignorato per ruolo Referente SOL su account "
+                f"{account_context.account_id}."
+            )
             continue
 
         yield contact, roles

@@ -15,6 +15,7 @@ from .alerts import (
     check_telefono_contactpoint,
 )
 from .data_store import DATA_STORE, SalesforceRelationshipStore
+from .logbook import log_loop_event
 
 ALERT_MODULES = (
     check_duplicati_ruolo,
@@ -47,6 +48,7 @@ class AlertLoopRunner:
 
         targets = list(self._iter_targets(account_ids))
         print(f"[Allerte] Trovati {len(targets)} account da analizzare.")
+        log_loop_event(f"Individuati {len(targets)} account da analizzare nel ciclo allerte.")
 
         for index, account_id in enumerate(targets, start=1):
             context = self.store.describe_account(account_id)
@@ -55,11 +57,15 @@ class AlertLoopRunner:
                 f"[Allerte] ({index}/{len(targets)}) Analisi dell'account "
                 f"{account_name} ({account_id})."
             )
+            log_loop_event(
+                f"Avvio analisi account {account_name} ({account_id}) ({index}/{len(targets)})."
+            )
             for module in ALERT_MODULES:
                 module.run(context, summary=self.summary)
 
         details = self.summary.all_alerts()
         print(f"[Allerte] Rilevate {len(details)} allerte complessive.")
+        log_loop_event(f"Ciclo completato con {len(details)} allerte rilevate.")
         return {
             "details": details,
             "summary": self.summary.summary_rows(),
@@ -73,6 +79,10 @@ class AlertLoopRunner:
                 if account_id in self.store.accounts and account_id not in seen:
                     seen.add(account_id)
                     yield account_id
+                else:
+                    log_loop_event(
+                        f"Account {account_id} ignorato perché duplicato o non presente nei dati caricati."
+                    )
             return
 
         yield from self.store.iter_account_ids()

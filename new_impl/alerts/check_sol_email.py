@@ -6,6 +6,7 @@ from typing import List
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import has_referente_sol_role, iter_contacts, normalise_text
 
 TARGET_TYPE = normalise_text("E-mail SOL")
@@ -23,6 +24,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
 
     for contact, roles in iter_contacts(account_context, include_referente_sol=True):
         if not has_referente_sol_role(roles):
+            log_loop_event(
+                f"[{account_id}] Contatto {contact.get('Id', 'sconosciuto')} non è Referente SOL, salto controllo email SOL."
+            )
             continue
 
         contact_id = contact["Id"]
@@ -35,6 +39,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         valid_points = [point for point in sol_candidates if (point.get("EmailAddress") or "").strip()]
 
         if valid_points:
+            log_loop_event(
+                f"[{account_id}] Contatto {contact_id} ha già un ContactPointEmail SOL valido, nessuna allerta."
+            )
             continue
 
         types_found = [normalise_text(point.get("Type__c")) or "(vuoto)" for point in contact_points]
