@@ -10,6 +10,7 @@ from flask import Flask, Response, jsonify, render_template, request, send_file
 from .alert_loop import ALERT_LOOP
 from .alert_summary import ALERT_SUMMARY
 from .csv_import import IMPORT_COORDINATOR
+from .logbook import LOG_FILE, read_log_bytes, read_log_lines
 
 
 SUPPORTED_ENTITIES = [
@@ -73,6 +74,23 @@ def create_app() -> Flask:
             mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             as_attachment=True,
             download_name="riepilogo_allerte.xlsx",
+        )
+
+    @app.get("/api/logs")
+    def view_logs() -> Response:
+        """Restituisce il log delle decisioni dei cicli in formato testuale."""
+
+        return jsonify({"log": read_log_lines(), "path": str(LOG_FILE)})
+
+    @app.get("/api/logs/download")
+    def download_logs() -> Response:
+        """Consente di scaricare il file di log generato dai cicli."""
+
+        return send_file(
+            io.BytesIO(read_log_bytes()),
+            mimetype="text/plain",
+            as_attachment=True,
+            download_name="ciclo_allerte.log",
         )
 
     return app

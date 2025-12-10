@@ -6,6 +6,7 @@ from typing import List
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts, normalise_phone
 
 
@@ -46,6 +47,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         point_values: List[str] = [value for value in normalised_point_numbers if value]
 
         if not contact_values and not point_values:
+            log_loop_event(
+                f"[{account_id}] Nessun numero per contatto {contact_id}, salto controllo telefoni."
+            )
             continue
 
         if contact_values and not point_values:
@@ -55,6 +59,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         else:
             has_match = any(value in point_values for value in contact_values)
             if has_match:
+                log_loop_event(
+                    f"[{account_id}] Numeri coincidenti per contatto {contact_id}, nessuna allerta."
+                )
                 continue
             details = "Numeri presenti ma non coincidono tra Contact e ContactPointPhone."
 

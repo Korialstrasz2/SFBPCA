@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Iterable, List, Optional, Sequence
 
+from .logbook import log_loop_event
+
 
 @dataclass
 class AccountContext:
@@ -90,6 +92,11 @@ class SalesforceRelationshipStore:
             contact_id = relation.get("ContactId")
             if account_id and contact_id:
                 self.account_to_relations[account_id].append(relation)
+            else:
+                log_loop_event(
+                    "Relazione AccountContact scartata per ID mancanti "
+                    f"(AccountId={account_id!r}, ContactId={contact_id!r})."
+                )
 
         self.contact_to_individual = {}
         self.individual_to_contacts = defaultdict(list)
@@ -100,18 +107,29 @@ class SalesforceRelationshipStore:
                 self.individual_to_contacts[individual_id].append(contact_id)
             else:
                 self.contact_to_individual[contact_id] = None
+                log_loop_event(
+                    f"Contatto {contact_id} senza IndividualId associato, salto associazione."
+                )
 
         self.individual_to_phones = defaultdict(list)
         for phone in self.contact_point_phones:
             parent_id = phone.get("ParentId")
             if parent_id:
                 self.individual_to_phones[parent_id].append(phone)
+            else:
+                log_loop_event(
+                    "ContactPointPhone scartato per ParentId mancante: " f"{phone}"
+                )
 
         self.individual_to_emails = defaultdict(list)
         for email in self.contact_point_emails:
             parent_id = email.get("ParentId")
             if parent_id:
                 self.individual_to_emails[parent_id].append(email)
+            else:
+                log_loop_event(
+                    "ContactPointEmail scartato per ParentId mancante: " f"{email}"
+                )
 
     # ------------------------------------------------------------------
     # Lookup helpers
@@ -127,9 +145,15 @@ class SalesforceRelationshipStore:
         for relation in self.account_to_relations.get(account_id, []):
             contact_id = relation.get("ContactId")
             if not contact_id:
+                log_loop_event(
+                    f"Relazione AccountContact senza ContactId per account {account_id}, salto."
+                )
                 continue
             contact = self.contacts.get(contact_id)
             if not contact:
+                log_loop_event(
+                    f"Contatto {contact_id} non trovato per account {account_id}, salto."
+                )
                 continue
             enriched = dict(contact)
             enriched["_relation"] = relation

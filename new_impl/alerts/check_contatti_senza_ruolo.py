@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts
 
 # Non serve stato condiviso, ma manteniamo l'interfaccia coerente
@@ -23,6 +24,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
     for contact, roles in iter_contacts(account_context):
         contact_id = contact["Id"]
         if roles:
+            log_loop_event(
+                f"[{account_id}] Contatto {contact_id} ha ruoli valorizzati, nessuna allerta per ruoli mancanti."
+            )
             continue
 
         contact_name = DATA_STORE.resolve_contact_name(contact_id)

@@ -9,6 +9,7 @@ from typing import Dict, Iterable, List, Optional
 from werkzeug.datastructures import FileStorage
 
 from .data_store import DATA_STORE, SalesforceRelationshipStore
+from .logbook import log_loop_event
 
 
 class CSVImportCoordinator:
@@ -44,12 +45,18 @@ class CSVImportCoordinator:
         for entity, required_columns in self.EXPECTED_COLUMNS.items():
             file_storage = payload.get(entity)
             if not file_storage:
+                log_loop_event(
+                    f"CSV per entità '{entity}' non fornito, salto importazione di questa sezione."
+                )
                 continue
 
             print(f"[Import] Elaborazione di {entity}...")
             records = self._read_csv(file_storage, required_columns)
             if not records:
                 print(f"[Import] Nessun record trovato per {entity}.")
+                log_loop_event(
+                    f"File CSV per '{entity}' vuoto o senza record utili, nessun dato importato."
+                )
                 continue
 
             self.store.replace_entity(entity, records)

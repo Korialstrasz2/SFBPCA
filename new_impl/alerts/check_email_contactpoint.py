@@ -6,6 +6,7 @@ from typing import List
 
 from ..alert_summary import AlertSummaryStore
 from ..data_store import AccountContext, DATA_STORE
+from ..logbook import log_loop_event
 from .common import iter_contacts, normalise_text
 
 
@@ -36,6 +37,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
         ]
 
         if not email_on_contact and not emails_on_points:
+            log_loop_event(
+                f"[{account_id}] Nessuna email trovata per contatto {contact_id}, salto controllo."
+            )
             continue
 
         if email_on_contact and not emails_on_points:
@@ -44,6 +48,9 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             details = "ContactPointEmail valorizzati ma il campo Email del contatto è vuoto."
         else:
             if email_on_contact in emails_on_points:
+                log_loop_event(
+                    f"[{account_id}] Email coincidenti per contatto {contact_id}, nessuna allerta."
+                )
                 continue
             details = "Email presenti ma non coincidono tra Contact e ContactPointEmail."
 
