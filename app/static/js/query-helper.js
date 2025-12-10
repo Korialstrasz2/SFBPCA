@@ -17,7 +17,7 @@ const SOQL_BUILDERS = {
   // Contacts linked to those accounts through AccountContactRelation
   contacts: (ids) =>
     `SELECT Id, FirstName, LastName, IndividualId, AccountId, FiscalCode__c,
-            VATNumber__c, MobilePhone, Phone, Email
+            VATNumber__c, MobilePhone, Phone, Email,Company__c
      FROM Contact
      WHERE Id IN (
        SELECT ContactId FROM AccountContactRelation

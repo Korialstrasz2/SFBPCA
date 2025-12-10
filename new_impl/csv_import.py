@@ -26,6 +26,7 @@ class CSVImportCoordinator:
             "MobilePhone",
             "Phone",
             "Email",
+            "Company__c",
         ),
         "individuals": ("Id", "FirstName", "LastName"),
         "account_contact_relations": ("Id", "AccountId", "ContactId", "Roles"),
