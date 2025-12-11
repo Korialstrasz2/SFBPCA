@@ -33,7 +33,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
             continue
 
         contact_name = DATA_STORE.resolve_contact_name(contact_id)
-        details = "Contatto privo di recapiti (telefono o email) compilati."
+        details = "Contatto privo alcun recapito (telefono o email) compilati."
         message = "\n".join(
             [
                 f"Il contatto {contact_name} non ha alcun recapito disponibile.",
