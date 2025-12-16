@@ -156,6 +156,11 @@ class SalesforceRelationshipStore:
                 )
                 continue
             enriched = dict(contact)
+            if enriched["AccountId"] != account_id:
+                log_loop_event(
+                    f"Contatto {contact_id} con altro account {enriched['AccountId']} rispetto ad account {account_id}, salto."
+                )
+                continue
             enriched["_relation"] = relation
             contacts.append(enriched)
         return contacts
