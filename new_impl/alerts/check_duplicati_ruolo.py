@@ -29,7 +29,7 @@ def run(account_context: AccountContext, *, summary: AlertSummaryStore) -> None:
     account_name = DATA_STORE.resolve_account_name(account_id)
 
     # Passo 1: raggruppo i contatti per ruolo, nome e identificativi fiscali.
-    buckets: Dict[Tuple[str, str, str, str], List[str]] = {}
+    buckets: Dict[Tuple[str, str, str, str, str], List[str]] = {}
     for contact, roles in iter_contacts(account_context):
         contact_id = contact["Id"]
         name_token = normalise_name(contact)
